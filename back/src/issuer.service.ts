@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import * as sdk from '@cmts-dev/carmentis-sdk';
 import { EnvService } from './env.service';
 import { promises as fs } from 'fs';
@@ -89,7 +89,7 @@ export class IssuerService implements OnModuleInit{
 		await vb.sign();
 
 		try {
-			this.logger.log("Attempting to initiate the issuer account...")
+			this.logger.log("Attempting to create the issuer account...")
 			const mb = await vb.publish();
 			this.issuerAccountHash = mb.hash;
 			this.logger.log("Issuer account created successfully !")

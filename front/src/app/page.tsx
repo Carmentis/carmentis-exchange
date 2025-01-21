@@ -8,7 +8,7 @@ import {yupResolver} from '@hookform/resolvers/yup';
 import { Button, Card, CardContent, Input, Link, TextField, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useConnectionNodeUrl } from '@/app/connection.context';
-import { useTokenAccountCreation } from '@/app/api';
+import { createTokenAccount } from '@/app/api';
 import { useToast } from '@/app/notification.context';
 
 export default function Home() {
@@ -60,22 +60,28 @@ const schema = yup.object({
 function PaymentForm() {
 	const toast = useToast();
 
-	const { register, handleSubmit, formState: { errors } } = useForm({
+	const { register, formState: { errors } } = useForm({
 		resolver: yupResolver(schema),
 	});
 
-	const onSubmit = (data: any) => {
-		useTokenAccountCreation(data.publicKey, data.tokenAmount)
-			.then(() => toast.success("Account credited"))
-			.catch((error) => toast.error(error))
+	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+
+		createTokenAccount({
+			publicKey: formData.get('publicKey') as string,
+			tokenAmount: parseInt(formData.get('tokenAmount'), 10),
+		}).then(() => toast.success("Account credited"))
+			.catch((e) => toast.error(e));
 	};
 
+
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className={"flex flex-col p-4 space-y-4"}>
-			<TextField {...register("publicKey")} placeholder={"Public key"} />
+		<form onSubmit={handleSubmit} className={"flex flex-col p-4 space-y-4"}>
+			<TextField {...register("publicKey")} placeholder={"Public key"} name={"publicKey"} />
 
 
-			<TextField type={"number"} {...register("tokenAmount")} placeholder={"Token Amount"}/>
+			<TextField type={"number"} {...register("tokenAmount")} placeholder={"Token Amount"} name={"tokenAmount"}/>
 
 			<Button type="submit" variant={"contained"}>Credit</Button>
 		</form>

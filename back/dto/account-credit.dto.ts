@@ -1,10 +1,10 @@
-import { IsPositive, IsString } from 'class-validator';
+import { IsDefined, IsPositive, IsString } from 'class-validator';
 
 export class AccountCreditDto {
 
-	@IsString()
+	@IsDefined()
 	publicKey: string;
 
-	@IsPositive()
+	@IsDefined()
 	tokenAmount: number;
 }

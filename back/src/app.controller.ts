@@ -19,11 +19,10 @@ export class AppController {
 	async creditAccount(
 		@Body() accountCreditDto: AccountCreditDto,
 	) {
+
 		const publicKey = accountCreditDto.publicKey;
 		const tokenAmount = accountCreditDto.tokenAmount;
-
-		console.log(publicKey, tokenAmount);
-
+		console.log(publicKey, tokenAmount)
 		await this.issuerService.creditTokenAccount(publicKey, tokenAmount);
 	}
 

@@ -14,12 +14,22 @@ export async function useExchangeConfig(): Promise<string> {
 	})
 }
 
-export async function useTokenAccountCreation(
-	publicKey: string,
-	tokenAmount: number
+export async function createTokenAccount(
+	data: { publicKey: string; tokenAmount: number }
 ) {
-	return axios.post(EXCHANGE_API + '/createTokenAccount',{
-		publicKey,
-		tokenAmount
-	})
+	const publicKey = data.publicKey;
+	const tokenAmount = data.tokenAmount;
+
+	const url = EXCHANGE_API + '/creditTokenAccount';
+	try {
+		const {data} = await axios.post(url,{
+			publicKey,
+			tokenAmount
+		})
+		return data;
+	} catch (e) {
+		console.error(`Cannot credit the account: got the following error:`, e)
+		throw new Error(`${e}`)
+	}
+
 }
