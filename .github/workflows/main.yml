@@ -32,6 +32,7 @@ jobs:
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
           context: ./back
+          dockerfile: ./back/Dockerfile
           push: true
           tags: ghcr.io/carmentis/exchange-carmentis/back:latest
 
@@ -57,5 +58,6 @@ jobs:
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
           context: ./front
+          dockerfile: ./front/Dockerfile
           push: true
           tags: ghcr.io/carmentis/exchange-carmentis/front:latest
