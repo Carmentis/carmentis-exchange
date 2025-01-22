@@ -38,6 +38,7 @@ jobs:
       packages: write
       id-token: write
     steps:
+      - run: ls
       - name: Build and push back exchange Docker image
         id: push
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -54,6 +55,7 @@ jobs:
       packages: write
       id-token: write
     steps:
+      - run: ls
       - name: Build and push front exchange Docker image
         id: push
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
