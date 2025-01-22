@@ -34,7 +34,7 @@ jobs:
           context: ./back
           dockerfile: ./back/Dockerfile
           push: true
-          tags: ghcr.io/carmentis/exchange-carmentis/back:latest
+          tags: ghcr.io/carmentis/exchange.carmentis/back:latest
 
   build-front:
     runs-on: ubuntu-latest
@@ -60,4 +60,4 @@ jobs:
           context: ./front
           dockerfile: ./front/Dockerfile
           push: true
-          tags: ghcr.io/carmentis/exchange-carmentis/front:latest
+          tags: ghcr.io/carmentis/exchange.carmentis/front:latest
