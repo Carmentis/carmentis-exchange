@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build --no-lint --experimental-app-only --experimental-build-mode compile",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@cmts-dev/carmentis-sdk": "^0.0.9",
+    "@cmts-dev/carmentis-sdk": "^0.0.13",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^3.10.0",

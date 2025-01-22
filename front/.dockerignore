@@ -1,0 +1,4 @@
+../front/.next
+.idea
+**/node_modules
+**/out
