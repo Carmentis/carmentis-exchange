@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  back:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    image: ghcr.io/carmentis/exchange-carmentis/back
+    container_name: carmentis-exchange-back
+    environment:
+      - NODE_URL=${NODE_URL}
+      - PORT=${EXCHANGE_BACK_PORT}
+    ports:
+      - "${EXCHANGE_BACK_PORT}:${EXCHANGE_BACK_PORT}"
+    env_file:
+      - .env
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    image: ghcr.io/carmentis/exchange-carmentis/front
+    container_name: carmentis-exchange-front
+    environment:
+      - EXCHANGE_API=${EXCHANGE_API}
+      - PORT=${EXCHANGE_FRONT_PORT}
+    ports:
+      - "${EXCHANGE_FRONT_PORT}:${EXCHANGE_FRONT_PORT}"
+    env_file:
+      - .env
+    depends_on:
+      - back
