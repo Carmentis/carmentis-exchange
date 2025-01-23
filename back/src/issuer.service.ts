@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, NotImplementedException, OnModuleInit } from '@nestjs/common';
-import * as sdk from '@cmts-dev/carmentis-sdk';
+import * as sdk from '@cmts-dev/carmentis-sdk/server';
 import { EnvService } from './env.service';
 import { promises as fs } from 'fs';
 import * as path from 'path';
