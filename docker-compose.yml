@@ -5,7 +5,7 @@ services:
     build:
       context: ./back
       dockerfile: Dockerfile
-    image: ghcr.io/carmentis/exchange.carmentis/back
+    image: ghcr.io/carmentis/exchange/back
     container_name: carmentis-exchange-back
     environment:
       - NODE_URL=${NODE_URL}
@@ -19,7 +19,7 @@ services:
     build:
       context: ./front
       dockerfile: Dockerfile
-    image: ghcr.io/carmentis/exchange.carmentis/front
+    image: ghcr.io/carmentis/exchange/front
     container_name: carmentis-exchange-front
     environment:
       - EXCHANGE_API=${EXCHANGE_API}

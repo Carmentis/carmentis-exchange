@@ -9,6 +9,8 @@ on:
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
+  EXCHANGE_BACK_IMAGE: ghcr.io/carmentis/exchange/back:latest
+  EXCHANGE_FRONT_IMAGE: ghcr.io/carmentis/exchange/front:latest
 
 jobs:
   build-back:
@@ -34,7 +36,7 @@ jobs:
           context: ./back
           dockerfile: ./back/Dockerfile
           push: true
-          tags: ghcr.io/carmentis/exchange.carmentis/back:latest
+          tags: ${{ env.EXCHANGE_BACK_IMAGE }}
 
   build-front:
     runs-on: ubuntu-latest
@@ -60,4 +62,4 @@ jobs:
           context: ./front
           dockerfile: ./front/Dockerfile
           push: true
-          tags: ghcr.io/carmentis/exchange.carmentis/front:latest
+          tags:  ${{ env.EXCHANGE_FRONT_IMAGE }}
