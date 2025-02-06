@@ -9,7 +9,6 @@ import * as path from 'path';
 export class IssuerService implements OnModuleInit{
 	private logger = new Logger(IssuerService.name);
 	private issuerAccountHash: string;
-	private issuerPrivateKey: string;
 
 	constructor(
 		private readonly envService: EnvService
@@ -58,7 +57,6 @@ export class IssuerService implements OnModuleInit{
 		}
 
 		// set the issuer private key and update the
-		this.issuerPrivateKey = issuerPrivateKey;
 		sdk.blockchain.blockchainCore.setNode(this.envService.nodeUrl);
 		sdk.blockchain.blockchainCore.setUser(
 			sdk.blockchain.ROLES.USER,
