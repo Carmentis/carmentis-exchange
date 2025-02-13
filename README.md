@@ -2,6 +2,37 @@
 
 ## Launch in production mode (using docker-compose)
 We recommend the installation of the Exchange server using docker-compose. 
+Below is presented an example of docker-compose.yml file: 
+```yml
+version: '3.8'
+
+services:
+   back:
+      image: ghcr.io/carmentis/exchange/back:latest
+      container_name: carmentis-exchange-back
+      restart: always
+      environment:
+         - ISSUER_KEYPAIR_FILE=/app/config/issuer-keypair.json
+         - NODE_URL=NODE_URL
+         - PORT=3000
+      volumes:
+         - ./keys:/app/config
+      ports:
+         - "5003:3000"
+
+   front:
+      image: ghcr.io/carmentis/exchange/front:latest
+      container_name: carmentis-exchange-front
+      restart: always
+      environment:
+         - EXCHANGE_API=EXCHANGE_API
+         - PORT=3000
+      ports:
+         - "5004:3000"
+      depends_on:
+         - back
+
+```
 
 ## Launch in production mode (using Docker)
 
