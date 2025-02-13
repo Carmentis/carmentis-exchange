@@ -3,7 +3,7 @@ import { AccountCreditDto } from '../dto/account-credit.dto';
 import { IssuerService } from './issuer.service';
 import { EnvService } from './env.service';
 
-@Controller('/api')
+@Controller('/')
 export class AppController {
 	constructor(
 		private readonly issuerService: IssuerService,
