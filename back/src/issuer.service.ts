@@ -1,9 +1,17 @@
-import { Injectable, Logger, NotFoundException, NotImplementedException, OnModuleInit } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	Logger,
+	NotFoundException,
+	NotImplementedException,
+	OnModuleInit
+} from '@nestjs/common';
 import * as sdk from '@cmts-dev/carmentis-sdk/server';
 import { EnvService } from './env.service';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
+const MAXIMAL_ALLOWED_TOKEN_TRANSFER = 50;
 
 @Injectable()
 export class IssuerService implements OnModuleInit{
@@ -101,6 +109,10 @@ export class IssuerService implements OnModuleInit{
 
 		if (!this.issuerAccountHash)
 			throw new NotFoundException("Issuer account not found");
+
+		// cap the maximal number of tokens
+		if (MAXIMAL_ALLOWED_TOKEN_TRANSFER >= 0 && MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount)
+			throw new BadRequestException(`Maximal amount of token transfer reached: Currently limited to ${MAXIMAL_ALLOWED_TOKEN_TRANSFER}`)
 
 		// attempt to access the token account
 		try {
