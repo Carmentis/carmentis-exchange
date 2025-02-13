@@ -8,8 +8,7 @@ COPY . .
 
 # Install dependencies and build
 RUN npm install
-RUN npm run build
 
 
 # Start the Next.js server
-CMD ["npm", "run", "start"]
+CMD ["sh", "/app/start.sh"]
