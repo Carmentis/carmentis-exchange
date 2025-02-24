@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { join } from 'path';
 import { IssuerService } from './issuer.service';
 import { EnvService } from './env.service';
 import { LoggingMiddleware } from './logging.service';

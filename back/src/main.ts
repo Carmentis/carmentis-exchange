@@ -19,12 +19,15 @@ async function bootstrap() {
     });
 
     // add a rate limit on the number of requests
+    /*
     app.use(
         rateLimit({
             windowMs: 15 * 60 * 1000, // 15 minutes
             max: 100, // 100 requêtes max par IP
         }),
     );
+
+     */
 
 
     app.useGlobalPipes(validationPipe);

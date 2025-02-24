@@ -85,7 +85,7 @@ export class IssuerService implements OnModuleInit{
 
 
 
-		const vb = new sdk.blockchain.accountVb();
+		const vb = new sdk.blockchain.accountVb(this.issuerAccountHash);
 		await vb.addTokenIssuance({
 			issuerPublicKey: issuerPublicKey,
 			amount: sdk.constants.ECO.INITIAL_OFFER
@@ -131,14 +131,15 @@ export class IssuerService implements OnModuleInit{
 	private async createAndCreditAccount(buyerPublicKey: string, tokenAmount: number) {
 		this.logger.log("Creating token account...");
 		let rootAccountVbHash = this.issuerAccountHash;
-		let vb = new sdk.blockchain.accountVb();
-		vb.setGasPrice(sdk.constants.ECO.TOKEN);
+		let vb = new sdk.blockchain.accountVb(rootAccountVbHash);
 
 		await vb.create({
 			sellerAccount: rootAccountVbHash,
 			buyerPublicKey: buyerPublicKey,
 			amount: tokenAmount * sdk.constants.ECO.TOKEN
 		});
+
+		vb.setGasPrice(sdk.constants.ECO.TOKEN);
 		await vb.sign();
 		const mb = await vb.publish();
 		this.logger.log(`Token account created (${mb.hash}) with initial account of ${tokenAmount} tokens`)
@@ -146,17 +147,18 @@ export class IssuerService implements OnModuleInit{
 
 	private async creditAccount(buyerAccountHash: string, tokenAmount: number) {
 		this.logger.log(`Transferring ${tokenAmount} tokens from root account to existing buyer account`);
-		const vb = new sdk.blockchain.accountVb();
-		await vb.load(this.issuerAccountHash);
+		const vb = new sdk.blockchain.accountVb(this.issuerAccountHash);
+		await vb.load();
 
 		const transfer = vb.createTransfer(buyerAccountHash, tokenAmount * sdk.constants.ECO.TOKEN);
 		transfer.addPublicReference("public ref");
 		transfer.addPrivateReference("private ref");
 		await transfer.commit();
 
-		await vb.sign();
 
 		vb.setGasPrice(sdk.constants.ECO.TOKEN);
+		await vb.sign();
+
 		await vb.publish();
 	}
 }
