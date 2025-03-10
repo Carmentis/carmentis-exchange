@@ -1,0 +1,8 @@
+@Library('helper-building-scripts')_
+
+buildAndPushDockerImage(
+    GIT_REPO_URL: 'https://github.com/carmentis/carmentis-exchange.git',
+    PROJECT_DIR: './front',
+    DOCKER_IMAGE_NAME: 'exchange/front',
+    GIT_REPO_BRANCH: 'master'
+)
