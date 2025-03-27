@@ -5,22 +5,61 @@ import { PropsWithChildren, useState } from 'react';
 import * as yup from "yup";
 import {yupResolver} from '@hookform/resolvers/yup';
 
-import { Button, Card, CardContent, Input, Link, TextField, Typography } from '@mui/material';
+import {AppBar, Button, Card, CardContent, Chip, Input, Link, TextField, Toolbar, Typography} from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useConnectionNodeUrl } from '@/app/connection.context';
 import { createTokenAccount } from '@/app/api';
 import { useToast } from '@/app/notification.context';
+import {usePathname} from "next/navigation";
 
 export default function Home() {
 	return (
-		<GrayBackground>
-			<FlexCenter>
-				<PaymentCard />
-			</FlexCenter>
+		<>
+			<Navbar/>
+			<GrayBackground>
 
-			<CarmentisNodeConnectionStatus/>
-		</GrayBackground>
+				<FlexCenter>
+					<PaymentCard/>
+				</FlexCenter>
+
+			</GrayBackground>
+		</>
 	);
+}
+
+function Navbar() {
+	const nodeUrl = useConnectionNodeUrl();
+
+
+	function renderNodeConnectionStatus() {
+		return <Chip label={<>
+		Node: {nodeUrl}
+		</>} variant={"outlined"}/>
+	}
+
+	const pathname = usePathname();
+	const env = pathname.includes("alpha") ? "alpha" : "beta"
+	const workspaceUrl = `https://workspace.${env}.carmentis.io`
+	const explorerUrl = `https://explorer.${env}.carmentis.io`
+
+	return <AppBar position="fixed" color={"transparent"}>
+		<Toolbar className="flex justify-between">
+			<Typography variant="h6" fontSize={"large"} className={"uppercase"}>Carmentis <Typography component={"span"} fontSize={"large"}>Exchange</Typography></Typography>
+			<div className="flex space-x-4 items-center">
+				{renderNodeConnectionStatus()}
+				<Link href={workspaceUrl} color="inherit" underline="none" target={"_blank"}>
+					<Button color={"primary"} variant={"contained"}>
+						Workspace
+					</Button>
+				</Link>
+				<Link href={explorerUrl} color="inherit" underline="none" target={"_blank"}>
+					<Button color={"primary"} variant={"contained"}>
+						Explorer
+					</Button>
+				</Link>
+			</div>
+		</Toolbar>
+	</AppBar>
 }
 
 function FlexCenter({ children }: PropsWithChildren) {
@@ -90,19 +129,5 @@ function PaymentForm() {
 
 
 
-function CarmentisNodeConnectionStatus() {
-
-	const nodeUrl = useConnectionNodeUrl();
-	return <div className={"absolute top-5 left-5 text-sm"}>
-			<div className="w-52">
-				<Typography className={"text-gray-400"} fontSize={"small"}>
-					Connected to node
-				</Typography>
-				<Typography fontSize={"small"}>
-					<Link target={"_blank"} href={nodeUrl}>{nodeUrl}</Link>
-				</Typography>
-			</div>
-	</div>
-}
 
 
