@@ -45,7 +45,7 @@ function PaymentCard() {
 				<ExchangeLogo />
 				<Typography variant={"h5"}>Exchange</Typography>
 				<Typography>
-					Credit your token accounts right now.
+					Purchase Carmentis tokens right now!
 				</Typography>
 				<PaymentForm/>
 		</CardContent>
