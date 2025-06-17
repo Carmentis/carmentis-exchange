@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+   "dev": "next dev --turbopack",
     "build": "next build --no-lint --experimental-app-only --experimental-build-mode compile",
     "start": "next start",
     "lint": "next lint"
@@ -16,6 +16,7 @@
     "@mui/material": "^6.4.0",
     "axios": "^1.7.9",
     "next": "15.1.5",
+    "next-runtime-env": "^3.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",

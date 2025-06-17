@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import { createContext, PropsWithChildren, useContext } from 'react';
 import { useExchangeConfig } from '@/app/api';
 
 /**
@@ -18,6 +18,8 @@ import { useExchangeConfig } from '@/app/api';
  */
 export interface ConnectionInterface {
 	nodeUrl: string | undefined,
+	loading: boolean,
+	error: Error | null,
 }
 
 /**
@@ -36,20 +38,16 @@ export const ConnectionContext = createContext<ConnectionInterface|undefined>(un
 
 /**
  * Provides a context for managing connection details such as the `nodeUrl`.
- * It fetches and sets the `nodeUrl` from the exchange configuration.
+ * It uses the useExchangeConfig hook to fetch and manage the nodeUrl state.
  *
  * @param {PropsWithChildren} props - The properties object with children components.
  * @return {JSX.Element} A provider component wrapping the children with the connection context.
  */
 export function ConnectionContextProvider({children}: PropsWithChildren) {
-	const [nodeUrl, setNodeUrl] = useState<string|undefined>(undefined);
+	// Use the new hook which handles loading and error states
+	const { nodeUrl, loading, error } = useExchangeConfig();
 
-	useEffect(() => {
-		useExchangeConfig()
-			.then(nodeUrl => setNodeUrl(nodeUrl))
-	}, []);
-
-	return <ConnectionContext.Provider value={{nodeUrl}}>
+	return <ConnectionContext.Provider value={{nodeUrl, loading, error}}>
 		{children}
 	</ConnectionContext.Provider>
 }
@@ -61,7 +59,5 @@ export function ConnectionContextProvider({children}: PropsWithChildren) {
  * @return {string | undefined} The node URL from the connection context, or undefined if not available.
  */
 export function useConnectionNodeUrl(): string | undefined {
-	const context = useContext(ConnectionContext);
-	if (!context) throw new Error("Cannot use useConnectionNodeUrl outside of ConnectionContextProvider")
-	return context.nodeUrl;
+	return process.env.NEXT_PUBLIC_EXCHANGE_API
 }

@@ -5,6 +5,40 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Custom colors - white and glass theme */
+  --glass-white: rgba(255, 255, 255, 0.7);
+  --glass-white-light: rgba(255, 255, 255, 0.9);
+  --glass-white-dark: rgba(255, 255, 255, 0.5);
+
+  --glass-gray: rgba(240, 240, 240, 0.7);
+  --glass-gray-light: rgba(245, 245, 245, 0.9);
+  --glass-gray-dark: rgba(230, 230, 230, 0.5);
+
+  /* Keep original colors as fallback but update to glass theme */
+  --primary-50: rgba(255, 255, 255, 0.95);
+  --primary-100: rgba(255, 255, 255, 0.9);
+  --primary-500: var(--glass-white);
+  --primary-600: var(--glass-white-light);
+  --primary-700: var(--glass-white-dark);
+
+  --secondary-50: rgba(250, 250, 250, 0.95);
+  --secondary-100: rgba(245, 245, 245, 0.9);
+  --secondary-500: var(--glass-gray);
+  --secondary-600: var(--glass-gray-light);
+  --secondary-700: var(--glass-gray-dark);
+
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+
+  /* Glass effect variables */
+  --glass-blur: 10px;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,5 +51,86 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom utility classes */
+.card-shadow {
+  box-shadow: var(--glass-shadow);
+  transition: box-shadow 0.3s ease-in-out, transform 0.3s ease;
+}
+
+.card-shadow:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+}
+
+/* Glass effect utility classes */
+.glass {
+  background-color: var(--glass-white);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-dark {
+  background-color: var(--glass-white-dark);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-light {
+  background-color: var(--glass-white-light);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-gray {
+  background-color: var(--glass-gray);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-no-border {
+  border: none;
+}
+
+.glass-hover:hover {
+  background-color: var(--glass-white-light);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Toast styling */
+.Toastify__toast {
+  border-radius: 0.75rem;
+  font-family: var(--font-geist-sans);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.Toastify__toast--success {
+  background-color: rgba(72, 187, 120, 0.8); /* Transparent green */
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.Toastify__toast--error {
+  background-color: rgba(239, 68, 68, 0.8); /* Transparent red */
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.Toastify__progress-bar {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
 }

@@ -6,7 +6,12 @@ import rateLimit from "express-rate-limit";
 
 async function bootstrap() {
     const logger = new Logger();
+
+    // create the app
     const app = await NestFactory.create(AppModule);
+    app.enableCors();
+
+    // create the validation pipe
     const validationPipe = new ValidationPipe({
         exceptionFactory: (errors: ValidationError[]) => {
             return new BadRequestException(
@@ -17,6 +22,7 @@ async function bootstrap() {
             );
         },
     });
+    app.useGlobalPipes(validationPipe);
 
     // add a rate limit on the number of requests
     /*
@@ -30,7 +36,7 @@ async function bootstrap() {
      */
 
 
-    app.useGlobalPipes(validationPipe);
+
     const port = process.env.PORT ?? 3000;
     logger.log(`Listening at port ${port}`)
     await app.listen(port);

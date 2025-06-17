@@ -1,0 +1,257 @@
+import { CardPaymentService } from "../card-payment.interface";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { PaymentRequestDto } from "../dto/payment-request.dto";
+import { PaymentResponseDto } from "../dto/payment-response.dto";
+import { PaymentEntity, PaymentStatus } from "../entities/payment.entity";
+import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
+
+@Injectable()
+export class StancerCardPaymentService implements CardPaymentService {
+    private readonly logger = new Logger(StancerCardPaymentService.name);
+    private readonly apiUrl = 'https://api.stancer.com/v2';
+
+    // In a real application, this would be loaded from environment variables
+    private readonly apiKey = process.env.STANCER_API_KEY;
+
+    constructor(
+        @InjectRepository(PaymentEntity)
+        private readonly paymentRepository: Repository<PaymentEntity>
+    ) {}
+
+    /**
+     * Process a payment using Stancer API
+     * @param paymentRequest The payment request data
+     * @returns A promise that resolves to the payment response with redirect URL
+     */
+    async processPayment(paymentRequest: PaymentRequestDto): Promise<PaymentResponseDto> {
+        // check that API key is set
+        if (!this.apiKey) {
+            throw new Error('Stancer API key not set');
+        }
+
+        try {
+            // Step 1: Create a payment entity with UUID
+            const payment = new PaymentEntity();
+            payment.id = uuidv4();
+            payment.amount = paymentRequest.amount;
+            payment.tokens = paymentRequest.tokens;
+            payment.walletPublicKey = paymentRequest.walletPublicKey;
+            payment.status = PaymentStatus.PENDING;
+            payment.metadata = {
+                cardLastFour: paymentRequest.card.number.slice(-4),
+                cardholderName: paymentRequest.card.name
+            };
+
+
+            // Step 2: Create a card on Stancer
+            const cardResponse = await this.createCard(paymentRequest);
+
+            // Update payment with card ID
+            payment.cardId = cardResponse.id;
+
+            // Step 3: Create a payment using the card and the UUID for return_url
+            // Make sure to use the correct backend URL for the return_url
+            // This should be the publicly accessible URL of your backend
+            const backendUrl = process.env.BACKEND_URL || 'http://localhost:3103';
+            const returnUrl = `${backendUrl}/payment/update/${payment.id}`;
+            const paymentResponse = await this.createPayment(
+                paymentRequest.amount,
+                cardResponse.id,
+                paymentRequest.tokens,
+                returnUrl
+            );
+
+            // Step 4: Update payment information in the database
+            const authRedirectionUrl = paymentResponse.auth.redirect_url;
+            this.logger.debug(`Stancer PayID{${paymentResponse.id}} -> Payment Redirection{${authRedirectionUrl}}`)
+            payment.paymentId = paymentResponse.id;
+            payment.redirectUrl = authRedirectionUrl;
+            await this.paymentRepository.save(payment);
+
+            // Step 5: Return the redirect URL and payment ID
+            return {
+                redirect_url: paymentResponse.auth.redirect_url,
+                payment_id: payment.id
+            };
+        } catch (error) {
+            this.logger.error(`Payment processing failed: ${error}`);
+            throw error;
+        }
+    }
+
+    /**
+     * Save payment information to the database
+     * @param paymentId The payment ID from Stancer
+     * @param cardId The card ID from Stancer
+     * @param paymentRequest The original payment request
+     * @param redirectUrl The redirect URL for 3D Secure
+     */
+    private async savePaymentToDatabase(
+        paymentId: string,
+        cardId: string,
+        paymentRequest: PaymentRequestDto,
+        redirectUrl: string
+    ): Promise<PaymentEntity> {
+        try {
+            const payment = new PaymentEntity();
+            payment.paymentId = paymentId;
+            payment.cardId = cardId;
+            payment.amount = paymentRequest.amount;
+            payment.tokens = paymentRequest.tokens;
+            payment.walletPublicKey = paymentRequest.walletPublicKey;
+            payment.redirectUrl = redirectUrl;
+            payment.status = PaymentStatus.PENDING;
+            payment.metadata = {
+                cardLastFour: paymentRequest.card.number.slice(-4),
+                cardholderName: paymentRequest.card.name
+            };
+
+            return await this.paymentRepository.save(payment);
+        } catch (error) {
+            this.logger.error(`Failed to save payment to database: ${error}`);
+            // We don't want to fail the payment process if database save fails
+            // Just log the error and continue
+            return null;
+        }
+    }
+
+    /**
+     * Create a card on Stancer
+     * @param paymentRequest The payment request containing card details
+     * @returns The created card object from Stancer
+     */
+    private async createCard(paymentRequest: PaymentRequestDto): Promise<any> {
+        try {
+            const response = await axios.post(
+                `${this.apiUrl}/cards/`,
+                {
+                    number: paymentRequest.card.number,
+                    exp_month: paymentRequest.card.exp_month,
+                    exp_year: paymentRequest.card.exp_year,
+                    cvc: paymentRequest.card.cvc,
+                    name: paymentRequest.card.name
+                },
+                {
+                    auth: {
+                        username: this.apiKey,
+                        password: ''
+                    }
+                }
+            );
+
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Failed to create card: ${error}`);
+            throw error;
+        }
+    }
+
+    /**
+     * Create a payment on Stancer
+     * @param amount The amount to charge
+     * @param cardId The ID of the card to charge
+     * @param tokens The number of tokens being purchased
+     * @param returnUrl The URL to redirect to after 3D Secure authentication
+     * @returns The created payment object from Stancer
+     */
+    private async createPayment(
+        amount: number,
+        cardId: string,
+        tokens: number,
+        returnUrl: string
+    ): Promise<any> {
+        try {
+            const response = await axios.post(
+                `${this.apiUrl}/payments/`,
+                {
+                    amount,
+                    currency: 'eur',
+                    description: `Purchase of ${tokens} tokens`,
+                    card: cardId,
+                    auth: {
+                        return_url: returnUrl
+                    }
+                },
+                {
+                    auth: {
+                        username: this.apiKey,
+                        password: ''
+                    }
+                }
+            );
+
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Failed to create payment: ${error}`);
+            throw error;
+        }
+    }
+
+    /**
+     * Get payment status from Stancer API
+     * @param paymentId The payment ID from Stancer
+     * @returns The payment status from Stancer
+     */
+    private async getPaymentStatusFromStancer(paymentId: string): Promise<any> {
+        try {
+            const response = await axios.get(
+                `${this.apiUrl}/payments/${paymentId}`,
+                {
+                    auth: {
+                        username: this.apiKey,
+                        password: ''
+                    }
+                }
+            );
+
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Failed to get payment status from Stancer: ${error}`);
+            throw error;
+        }
+    }
+
+    /**
+     * Check payment status and update it in the database
+     * @param id The local payment ID
+     * @returns The payment status
+     */
+    async checkPaymentStatus(id: string): Promise<{ status: string }> {
+        try {
+            // Find the payment in the database
+            const payment = await this.paymentRepository.findOne({ where: { id } });
+
+            if (!payment) {
+                throw new NotFoundException(`Payment with ID ${id} not found`);
+            }
+
+            // If the payment is already completed or failed, return the status
+            if (payment.status !== PaymentStatus.PENDING) {
+                return { status: payment.status };
+            }
+
+            // Otherwise, check the status from Stancer
+            const stancerPayment = await this.getPaymentStatusFromStancer(payment.paymentId);
+
+            // Update the payment status based on the Stancer response
+            if (stancerPayment.auth && stancerPayment.auth.status) {
+                if (stancerPayment.auth.status === 'success') {
+                    payment.status = PaymentStatus.COMPLETED;
+                } else if (stancerPayment.auth.status === 'failed') {
+                    payment.status = PaymentStatus.FAILED;
+                }
+
+                // Save the updated payment status
+                await this.paymentRepository.save(payment);
+            }
+
+            return { status: payment.status };
+        } catch (error) {
+            this.logger.error(`Failed to check payment status: ${error}`);
+            throw error;
+        }
+    }
+}

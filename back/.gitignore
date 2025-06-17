@@ -1,3 +1,4 @@
+*.sqlite
 *keypair.json
 # compiled output
 /dist

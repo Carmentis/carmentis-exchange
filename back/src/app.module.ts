@@ -3,9 +3,21 @@ import { AppController } from './app.controller';
 import { IssuerService } from './issuer.service';
 import { EnvService } from './env.service';
 import { LoggingMiddleware } from './logging.service';
+import { PaymentModule } from './payment/payment.module';
+import {TypeOrmModule} from "@nestjs/typeorm";
+import { ConfigModule } from '@nestjs/config';
 
+export const DB_STORAGE = 'db.sqlite';
 @Module({
   imports: [
+    PaymentModule,
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRoot({
+      type: 'sqlite',
+      database: DB_STORAGE,
+      entities: [__dirname + '/**/*.entity.{ts,js}'],
+      synchronize: true,
+    }),
   ],
   controllers: [AppController],
   providers: [EnvService, IssuerService],

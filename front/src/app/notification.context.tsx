@@ -1,20 +1,15 @@
 import { PropsWithChildren } from 'react';
-import { toast, ToastContainer } from 'react-toastify';
-
-
+import { toast } from 'react-toastify';
 
 /**
- * Provides a notification context by wrapping the given children with a ToastContainer.
- * This enables toast notifications throughout the children components.
+ * Provides a notification context for the application.
+ * The ToastContainer is now added in the layout.tsx file.
  *
  * @param {PropsWithChildren} props - The component props which include React children to be rendered within the provider.
- * @return {JSX.Element} The JSX element containing the ToastContainer and wrapped children components.
+ * @return {JSX.Element} The JSX element containing the wrapped children components.
  */
 export function NotificationContextProvider({children}: PropsWithChildren) {
-	return <>
-		<ToastContainer/>
-		{children}
-	</>
+	return <>{children}</>;
 }
 
 /**
