@@ -80,7 +80,6 @@ export class PaymentController {
 
 
         // Return HTML page with redirect to success page on the frontend
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3104'; // TODO add the FRONTEND_URL page
         res.send(`
         <!DOCTYPE html>
         <html>

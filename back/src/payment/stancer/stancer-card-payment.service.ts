@@ -7,6 +7,7 @@ import { PaymentResponseDto } from "../dto/payment-response.dto";
 import { PaymentEntity, PaymentStatus } from "../entities/payment.entity";
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import {ConfigService} from "@nestjs/config";
 
 @Injectable()
 export class StancerCardPaymentService implements CardPaymentService {
@@ -16,7 +17,8 @@ export class StancerCardPaymentService implements CardPaymentService {
 
     constructor(
         @InjectRepository(PaymentEntity)
-        private readonly paymentRepository: Repository<PaymentEntity>
+        private readonly paymentRepository: Repository<PaymentEntity>,
+        private readonly configService: ConfigService,
     ) {}
 
     /**
@@ -53,7 +55,7 @@ export class StancerCardPaymentService implements CardPaymentService {
             // Step 3: Create a payment using the card and the UUID for return_url
             // Make sure to use the correct backend URL for the return_url
             // This should be the publicly accessible URL of your backend
-            const backendUrl = process.env.BACKEND_URL || 'http://localhost:3103';
+            const backendUrl = this.configService.getOrThrow<string>("EXCHANGE_API")
             const returnUrl = `${backendUrl}/payment/update/${payment.id}`;
             const paymentResponse = await this.createPayment(
                 paymentRequest.amount,

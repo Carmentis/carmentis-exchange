@@ -5,7 +5,7 @@ import { EnvService } from './env.service';
 import { LoggingMiddleware } from './logging.service';
 import { PaymentModule } from './payment/payment.module';
 import {TypeOrmModule} from "@nestjs/typeorm";
-import { ConfigModule } from '@nestjs/config';
+import {ConfigModule, ConfigService} from '@nestjs/config';
 import {EventEmitterModule} from "@nestjs/event-emitter";
 import {StancerCardPaymentService} from "./payment/stancer/stancer-card-payment.service";
 
