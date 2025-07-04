@@ -11,18 +11,24 @@ export class LoggingMiddleware implements NestMiddleware {
 		const userAgent = req.get('user-agent') || '';
 		const startTime = Date.now();
 
+		/*
 		this.logger.log(
 			`-> ${method} ${originalUrl} - ${userAgent}`,
 		);
+
+		 */
 
 		res.on('finish', () => {
 			const { statusCode } = res;
 			const contentLength = res.get('content-length') || '0';
 			const elapsedTime = Date.now() - startTime;
 
+			/*
 			this.logger.log(
 				`<- ${method} ${originalUrl} ${statusCode} ${contentLength} - ${userAgent} - ${elapsedTime}ms`,
 			);
+
+			 */
 		});
 
 		next();

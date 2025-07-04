@@ -3,6 +3,8 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { StancerCardPaymentService } from "./stancer/stancer-card-payment.service";
 import { PaymentController } from "./payment.controller";
 import { PaymentEntity } from "./entities/payment.entity";
+import {IssuerService} from "../issuer.service";
+import {AppModule} from "../app.module";
 
 export const CARD_PAYMENT_SERVICE = Symbol('CARD_PAYMENT_SERVICE');
 

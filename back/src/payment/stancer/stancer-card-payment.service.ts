@@ -12,8 +12,6 @@ import { v4 as uuidv4 } from 'uuid';
 export class StancerCardPaymentService implements CardPaymentService {
     private readonly logger = new Logger(StancerCardPaymentService.name);
     private readonly apiUrl = 'https://api.stancer.com/v2';
-
-    // In a real application, this would be loaded from environment variables
     private readonly apiKey = process.env.STANCER_API_KEY;
 
     constructor(
@@ -219,7 +217,7 @@ export class StancerCardPaymentService implements CardPaymentService {
      * @param id The local payment ID
      * @returns The payment status
      */
-    async checkPaymentStatus(id: string): Promise<{ status: string }> {
+    async checkPaymentStatus(id: string): Promise<{ status: string, completed: boolean, pending: boolean }> {
         try {
             // Find the payment in the database
             const payment = await this.paymentRepository.findOne({ where: { id } });
@@ -230,7 +228,7 @@ export class StancerCardPaymentService implements CardPaymentService {
 
             // If the payment is already completed or failed, return the status
             if (payment.status !== PaymentStatus.PENDING) {
-                return { status: payment.status };
+                return { status: payment.status, completed: payment.status === 'completed', pending: payment.status === 'pending' };
             }
 
             // Otherwise, check the status from Stancer
@@ -248,10 +246,20 @@ export class StancerCardPaymentService implements CardPaymentService {
                 await this.paymentRepository.save(payment);
             }
 
-            return { status: payment.status };
+            return { status: payment.status, completed: payment.status === 'completed', pending: payment.status === 'pending' };
         } catch (error) {
             this.logger.error(`Failed to check payment status: ${error}`);
             throw error;
         }
+    }
+
+    /**
+     * Retrieves a payment record by its unique identifier.
+     *
+     * @param {string} id - The unique identifier of the payment to retrieve.
+     * @return {Promise<Object|null>} A promise that resolves to the payment record if found, otherwise null.
+     */
+    async getPaymentById(id: string) {
+        return this.paymentRepository.findOne({ where: { id } });
     }
 }

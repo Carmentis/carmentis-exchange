@@ -6,10 +6,13 @@ import { LoggingMiddleware } from './logging.service';
 import { PaymentModule } from './payment/payment.module';
 import {TypeOrmModule} from "@nestjs/typeorm";
 import { ConfigModule } from '@nestjs/config';
+import {EventEmitterModule} from "@nestjs/event-emitter";
+import {StancerCardPaymentService} from "./payment/stancer/stancer-card-payment.service";
 
 export const DB_STORAGE = 'db.sqlite';
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     PaymentModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
@@ -20,7 +23,7 @@ export const DB_STORAGE = 'db.sqlite';
     }),
   ],
   controllers: [AppController],
-  providers: [EnvService, IssuerService],
+  providers: [EnvService, IssuerService, StancerCardPaymentService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

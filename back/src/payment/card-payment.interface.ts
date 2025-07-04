@@ -1,5 +1,6 @@
 import { PaymentRequestDto } from './dto/payment-request.dto';
 import { PaymentResponseDto } from './dto/payment-response.dto';
+import {PaymentEntity} from "./entities/payment.entity";
 
 export interface CardPaymentService {
   /**
@@ -15,4 +16,6 @@ export interface CardPaymentService {
    * @returns The payment status
    */
   checkPaymentStatus(id: string): Promise<{ status: string }>;
+
+  getPaymentById(id: string): Promise<PaymentEntity>;
 }
