@@ -89,6 +89,7 @@ export class IssuerService implements OnModuleInit{
 			this.logger.log(`Issuer account located at hash ${this.issuerAccountHash.encode()}`);
 		}catch (e) {
 			this.logger.warn(`Issuer account not found (${e})`);
+			console.error(e);
 			this.logger.warn("Attempting to create the issuer account...")
 			await this.createIssuerAccount(blockchain);
 		}
@@ -105,6 +106,7 @@ export class IssuerService implements OnModuleInit{
 			this.logger.log(`Issuer account hash: ${this.issuerAccountHash.encode()}`);
 		} catch (e) {
 			this.logger.error(`Issuer account creation failure: ${e}`)
+			console.error(e);
 		}
 	}
 
