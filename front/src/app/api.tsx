@@ -177,8 +177,8 @@ export function useCardPayment() {
                   setLoading(false);
 
                   // Redirect to success page
-                  window.location.href = '/payment/success';
-                  return;
+                  //window.location.href = '/payment/success';
+                  //return;
                 } else if (statusResponse.data.status === 'failed') {
                   // Payment failed
                   throw new Error('Payment failed');

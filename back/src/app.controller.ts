@@ -2,7 +2,7 @@ import {Body, Controller, Get, Logger, Post} from '@nestjs/common';
 import { AccountCreditDto } from '../dto/account-credit.dto';
 import { IssuerService } from './issuer.service';
 import { EnvService } from './env.service';
-import {StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/server";
+import {CMTSToken, StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/server";
 import {OnEvent} from "@nestjs/event-emitter";
 import {CardPaymentService} from "./payment/card-payment.interface";
 import {StancerCardPaymentService} from "./payment/stancer/stancer-card-payment.service";
@@ -22,19 +22,17 @@ export class AppController {
 	}
 
 
-	//@Post('/creditTokenAccount')
 	@OnEvent('paiement.succeeded')
-
 	async creditAccount(
-		//@Body() accountCreditDto: AccountCreditDto,
 		{id}: {id: string}
 	) {
 		this.logger.debug(`Receiving payment notification: performing token transfer for payment ID: ${id}` )
 		const payment = await this.paymentService.getPaymentById(id)
 		const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
 		const publicKey = signatureEncoder.decodePublicKey(payment.walletPublicKey);
-		const tokenAmount = payment.amount;
+		const tokenAmount = CMTSToken.create(payment.tokens);
 		await this.issuerService.creditTokenAccount(publicKey, tokenAmount);
+		await this.paymentService.markPaymentAsDone(id)
 	}
 
 	@Get("/networkConfig")

@@ -26,7 +26,7 @@ export class PaymentController {
     @Post()
     @HttpCode(HttpStatus.OK)
     async processPayment(@Body() paymentRequest: PaymentRequestDto): Promise<PaymentResponseDto> {
-        this.logger.log(`Processing payment for ${paymentRequest.tokens} tokens, amount: ${paymentRequest.amount}`);
+        this.logger.log(`Processing payment for ${paymentRequest.tokens} tokens`);
 
         try {
             const response = await this.paymentService.processPayment(paymentRequest);

@@ -8,6 +8,7 @@ import { PaymentEntity, PaymentStatus } from "../entities/payment.entity";
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import {ConfigService} from "@nestjs/config";
+import {CarmentisError, CMTSToken, CurrencyConverterFactory} from "@cmts-dev/carmentis-sdk/server";
 
 @Injectable()
 export class StancerCardPaymentService implements CardPaymentService {
@@ -34,10 +35,13 @@ export class StancerCardPaymentService implements CardPaymentService {
 
         try {
             // Step 1: Create a payment entity with UUID
+            const converter = CurrencyConverterFactory.defaultEurosToCMTSTokenConverter();
+            const cmtsTokens = CMTSToken.create(paymentRequest.tokens);
+            const equivTokensInEuros = converter.invert(cmtsTokens).getAmount();
             const payment = new PaymentEntity();
             payment.id = uuidv4();
-            payment.amount = paymentRequest.amount;
             payment.tokens = paymentRequest.tokens;
+            payment.amount = equivTokensInEuros;
             payment.walletPublicKey = paymentRequest.walletPublicKey;
             payment.status = PaymentStatus.PENDING;
             payment.metadata = {
@@ -58,7 +62,7 @@ export class StancerCardPaymentService implements CardPaymentService {
             const backendUrl = this.configService.getOrThrow<string>("EXCHANGE_API")
             const returnUrl = `${backendUrl}/payment/update/${payment.id}`;
             const paymentResponse = await this.createPayment(
-                paymentRequest.amount,
+                equivTokensInEuros,
                 cardResponse.id,
                 paymentRequest.tokens,
                 returnUrl
@@ -77,44 +81,12 @@ export class StancerCardPaymentService implements CardPaymentService {
                 payment_id: payment.id
             };
         } catch (error) {
-            this.logger.error(`Payment processing failed: ${error}`);
+            if (CarmentisError.isCarmentisError(error)) {
+                this.logger.error(`Payment processing failed due to Carmentis error: ${error}`);
+            } else {
+                this.logger.error(`Payment processing failed: ${error}`);
+            }
             throw error;
-        }
-    }
-
-    /**
-     * Save payment information to the database
-     * @param paymentId The payment ID from Stancer
-     * @param cardId The card ID from Stancer
-     * @param paymentRequest The original payment request
-     * @param redirectUrl The redirect URL for 3D Secure
-     */
-    private async savePaymentToDatabase(
-        paymentId: string,
-        cardId: string,
-        paymentRequest: PaymentRequestDto,
-        redirectUrl: string
-    ): Promise<PaymentEntity> {
-        try {
-            const payment = new PaymentEntity();
-            payment.paymentId = paymentId;
-            payment.cardId = cardId;
-            payment.amount = paymentRequest.amount;
-            payment.tokens = paymentRequest.tokens;
-            payment.walletPublicKey = paymentRequest.walletPublicKey;
-            payment.redirectUrl = redirectUrl;
-            payment.status = PaymentStatus.PENDING;
-            payment.metadata = {
-                cardLastFour: paymentRequest.card.number.slice(-4),
-                cardholderName: paymentRequest.card.name
-            };
-
-            return await this.paymentRepository.save(payment);
-        } catch (error) {
-            this.logger.error(`Failed to save payment to database: ${error}`);
-            // We don't want to fail the payment process if database save fails
-            // Just log the error and continue
-            return null;
         }
     }
 
@@ -167,7 +139,7 @@ export class StancerCardPaymentService implements CardPaymentService {
             const response = await axios.post(
                 `${this.apiUrl}/payments/`,
                 {
-                    amount,
+                    amount: amount * 100, // stancer takes amount in cents
                     currency: 'eur',
                     description: `Purchase of ${tokens} tokens`,
                     card: cardId,
@@ -263,5 +235,17 @@ export class StancerCardPaymentService implements CardPaymentService {
      */
     async getPaymentById(id: string) {
         return this.paymentRepository.findOne({ where: { id } });
+    }
+
+    /**
+     * Marks a payment as completed by updating its status to 'COMPLETED'.
+     *
+     * @param {string} id - The unique identifier of the payment to be marked as done.
+     * @return {Promise<object>} A promise that resolves with the updated payment object after it is saved.
+     */
+    async markPaymentAsDone(id: string) {
+        const payment = await this.getPaymentById(id);
+        payment.status = PaymentStatus.COMPLETED;
+        return this.paymentRepository.save(payment);
     }
 }

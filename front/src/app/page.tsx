@@ -682,7 +682,6 @@ function PaymentForm({formData, onNext, onBack}: { formData: any, onNext: (data:
 // Confirmation Step (Step 3)
 function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: () => void, onReset: () => void }) {
     const toast = useToast();
-    const {createAccount, loading: isCreatingAccount} = useCreateTokenAccount();
 
     // Get the appropriate payment hook based on the payment method
     const {processPayment: processCardPayment, loading: isProcessingCardPayment} = useCardPayment();
@@ -731,10 +730,13 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
             }
 
             // Then create token account
+            /*
             await createAccount({
                 publicKey: formData.publicKey,
                 tokenAmount: formData.tokenAmount,
             });
+
+             */
 
             setSuccess(true);
             toast.success("Payment successful! Your account has been credited with tokens.");

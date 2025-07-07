@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 //import * as sdk from '@cmts-dev/carmentis-sdk/server';
 import {
-	Blockchain,
+	Blockchain, CMTSToken,
 	Hash,
 	PrivateSignatureKey,
 	ProviderFactory, PublicSignatureKey,
@@ -110,13 +110,13 @@ export class IssuerService implements OnModuleInit{
 		}
 	}
 
-	async creditTokenAccount(buyerPublicKey: PublicSignatureKey, tokenAmount: number ) {
+	async creditTokenAccount(buyerPublicKey: PublicSignatureKey, tokenAmount: CMTSToken ) {
 		// no token can be credit if the issuer account is not found
 		if (!this.issuerAccountHash)
 			throw new NotFoundException("Issuer account not found");
 
 		// cap the maximal number of tokens
-		if (MAXIMAL_ALLOWED_TOKEN_TRANSFER >= 0 && MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount)
+		if (MAXIMAL_ALLOWED_TOKEN_TRANSFER >= 0 && MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount.getAmount())
 			throw new BadRequestException(`Maximal amount of token transfer reached: Currently limited to ${MAXIMAL_ALLOWED_TOKEN_TRANSFER}`)
 
 		// create the explorer and the blockchain
@@ -141,17 +141,17 @@ export class IssuerService implements OnModuleInit{
 	}
 
 
-	private async createAndCreditAccount(blockchain: Blockchain, buyerPublicKey: PublicSignatureKey, tokenAmount: number) {
+	private async createAndCreditAccount(blockchain: Blockchain, buyerPublicKey: PublicSignatureKey, tokenAmount: CMTSToken) {
 		this.logger.log("Creating token account...");
-		const account = await blockchain.createAccount(this.issuerAccountHash, buyerPublicKey, tokenAmount);
+		const account = await blockchain.createAccount(this.issuerAccountHash, buyerPublicKey, tokenAmount.getAmount());
 		account.setGasPrice(TOKEN);
 		const hash = await account.publishUpdates();
-		this.logger.log(`Token account created (${hash.encode()}) with initial account of ${tokenAmount} tokens`)
+		this.logger.log(`Token account created (${hash.encode()}) with initial account of ${tokenAmount.toString()} tokens`)
 		return hash;
 	}
 
-	private async creditAccount(blockchain: Blockchain, receiverAccountHash: Hash , tokenAmount: number) {
-		this.logger.log(`Transferring ${tokenAmount} tokens from root account to existing buyer account`);
+	private async creditAccount(blockchain: Blockchain, receiverAccountHash: Hash , tokenAmount: CMTSToken) {
+		this.logger.log(`Transferring ${tokenAmount.toString()} tokens from root account to existing buyer account`);
 		const explorer = blockchain.getExplorer();
 
 		// load the accounts
@@ -161,7 +161,7 @@ export class IssuerService implements OnModuleInit{
 		const senderAccount = await blockchain.loadAccount(senderAccountHash);
 		await senderAccount.transfer({
 			account: receiverAccountHash.toBytes(),
-			amount: tokenAmount,
+			amount: tokenAmount.getAmount(),
 			publicReference: '',
 			privateReference: ''
 		})
