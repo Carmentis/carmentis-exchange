@@ -159,7 +159,7 @@ function PaymentCard() {
             <Box className="px-6 pt-4">
                 <Stepper activeStep={activeStep} alternativeLabel className="mb-6">
                     {steps.map((label) => (
-                        <Step key={label}>
+                        <Step key={label} sx={{textColor: "#000"}}>
                             <StepLabel>{label}</StepLabel>
                         </Step>
                     ))}
@@ -316,7 +316,7 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
                         <RadioGroup {...field} className="glass-light p-4 rounded-lg border border-white/30">
                             <FormControlLabel
                                 value="card"
-                                control={<Radio/>}
+                                control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>}
                                 label={
                                     <div className="flex items-center">
                                         <span className="mr-2">Card Payment</span>
@@ -327,7 +327,7 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
                             />
                             <FormControlLabel
                                 value="sepa"
-                                control={<Radio/>}
+                                control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>}
                                 label={
                                     <div className="flex items-center">
                                         <span className="mr-2">SEPA Transfer</span>
@@ -338,7 +338,7 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
                             />
                             <FormControlLabel
                                 value="crypto"
-                                control={<Radio/>}
+                                control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>}
                                 label={
                                     <div className="flex items-center">
                                         <span className="mr-2">Cryptocurrency</span>
@@ -549,9 +549,9 @@ function CryptoPaymentForm({formData, onSubmit, errors, control, register}: any)
                     control={control}
                     render={({field}) => (
                         <RadioGroup {...field} className="px-3 pb-2">
-                            <FormControlLabel value="BTC" control={<Radio/>} label="Bitcoin (BTC)"/>
-                            <FormControlLabel value="ETH" control={<Radio/>} label="Ethereum (ETH)"/>
-                            <FormControlLabel value="USDT" control={<Radio/>} label="Tether (USDT)"/>
+                            <FormControlLabel value="BTC" control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>} label="Bitcoin (BTC)"/>
+                            <FormControlLabel value="ETH" control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>} label="Ethereum (ETH)"/>
+                            <FormControlLabel value="USDT" control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>} label="Tether (USDT)"/>
                         </RadioGroup>
                     )}
                 />
