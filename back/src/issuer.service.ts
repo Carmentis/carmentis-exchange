@@ -141,7 +141,11 @@ export class IssuerService implements OnModuleInit{
 
 	private async createAndCreditAccount(blockchain: Blockchain, buyerPublicKey: PublicSignatureKey, tokenAmount: CMTSToken) {
 		this.logger.log("Creating token account...");
-		const account = await blockchain.createAccount(this.issuerAccountHash, buyerPublicKey, tokenAmount.getAmount());
+		const account = await blockchain.createAccount(
+			this.issuerAccountHash,
+			buyerPublicKey,
+			tokenAmount.getAmount(TokenUnit.ATOMIC)
+		);
 		account.setGasPrice(TOKEN);
 		const hash = await account.publishUpdates();
 		this.logger.log(`Token account created (${hash.encode()}) with initial account of ${tokenAmount.toString()} tokens`)
