@@ -1,22 +1,20 @@
-import {
-	BadRequestException,
-	Injectable,
-	Logger,
-	NotFoundException,
-	NotImplementedException,
-	OnModuleInit
-} from '@nestjs/common';
+import {BadRequestException, Injectable, Logger, NotFoundException, OnModuleInit} from '@nestjs/common';
 //import * as sdk from '@cmts-dev/carmentis-sdk/server';
 import {
-	Blockchain, CMTSToken,
+	Blockchain,
+	CMTSToken,
 	Hash,
 	PrivateSignatureKey,
-	ProviderFactory, PublicSignatureKey,
-	Secp256k1PrivateSignatureKey, StringSignatureEncoder, TOKEN
+	ProviderFactory,
+	PublicSignatureKey,
+	Secp256k1PrivateSignatureKey,
+	StringSignatureEncoder,
+	TOKEN,
+	TokenUnit
 } from '@cmts-dev/carmentis-sdk/server';
 
-import { EnvService } from './env.service';
-import { promises as fs } from 'fs';
+import {EnvService} from './env.service';
+import {promises as fs} from 'fs';
 import * as path from 'path';
 
 const MAXIMAL_ALLOWED_TOKEN_TRANSFER = 1000000;
@@ -161,7 +159,7 @@ export class IssuerService implements OnModuleInit{
 		const senderAccount = await blockchain.loadAccount(senderAccountHash);
 		await senderAccount.transfer({
 			account: receiverAccountHash.toBytes(),
-			amount: tokenAmount.getAmount(),
+			amount: tokenAmount.getAmount(TokenUnit.ATOMIC),
 			publicReference: '',
 			privateReference: ''
 		})
