@@ -10,8 +10,6 @@ import {
   Post,
   Put,
   Req,
-  UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { NodeService } from './node.service';
@@ -23,33 +21,8 @@ import {
 } from './dto/auth.dto';
 import { CreateNodeDto, NodeDto, UpdateNodeDto } from './dto/node.dto';
 import { Request } from 'express';
+import { Public } from './decorators/public.decorator';
 
-// Simple JWT auth guard
-class JwtAuthGuard {
-  constructor(private readonly authService: AuthService) {}
-
-  async canActivate(context: any): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
-    
-    if (!token) {
-      throw new UnauthorizedException('No token provided');
-    }
-    
-    try {
-      const publicKey = await this.authService.validateToken(token);
-      request['publicKey'] = publicKey;
-      return true;
-    } catch (error) {
-      throw new UnauthorizedException('Invalid token');
-    }
-  }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-  }
-}
 
 @Controller('/api/control')
 export class ControlController {
@@ -64,6 +37,7 @@ export class ControlController {
    * Generate a new authentication challenge
    * @returns The generated challenge
    */
+  @Public()
   @Post('auth/challenge')
   @HttpCode(HttpStatus.OK)
   async generateChallenge(): Promise<GenerateChallengeResponseDto> {
@@ -76,6 +50,7 @@ export class ControlController {
    * @param verifyChallengeDto The challenge verification data
    * @returns The JWT token if the signature is valid
    */
+  @Public()
   @Post('auth/verify')
   @HttpCode(HttpStatus.OK)
   async verifyChallenge(
@@ -95,7 +70,6 @@ export class ControlController {
    * @returns The authentication status
    */
   @Get('auth/status')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   async getAuthStatus(@Req() req: Request): Promise<AuthStatusResponseDto> {
     this.logger.log('Getting authentication status');
     return {
@@ -109,7 +83,6 @@ export class ControlController {
    * @returns All nodes
    */
   @Get('nodes')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   async getAllNodes(): Promise<NodeDto[]> {
     this.logger.log('Getting all nodes');
     return this.nodeService.findAll();
@@ -121,7 +94,6 @@ export class ControlController {
    * @returns The node
    */
   @Get('nodes/:id')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   async getNodeById(@Param('id') id: string): Promise<NodeDto> {
     this.logger.log(`Getting node with ID: ${id}`);
     return this.nodeService.findOne(id);
@@ -133,7 +105,6 @@ export class ControlController {
    * @returns The created node
    */
   @Post('nodes')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   async createNode(@Body() createNodeDto: CreateNodeDto): Promise<NodeDto> {
     this.logger.log(`Creating node: ${createNodeDto.name}`);
     return this.nodeService.create(createNodeDto);
@@ -146,7 +117,6 @@ export class ControlController {
    * @returns The updated node
    */
   @Put('nodes/:id')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   async updateNode(
     @Param('id') id: string,
     @Body() updateNodeDto: UpdateNodeDto,
@@ -160,7 +130,6 @@ export class ControlController {
    * @param id The node ID
    */
   @Delete('nodes/:id')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteNode(@Param('id') id: string): Promise<void> {
     this.logger.log(`Deleting node with ID: ${id}`);
@@ -173,7 +142,6 @@ export class ControlController {
    * @returns The updated node
    */
   @Put('nodes/:id/validator')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   async setNodeAsValidator(@Param('id') id: string): Promise<NodeDto> {
     this.logger.log(`Setting node with ID ${id} as validator`);
     return this.nodeService.setAsValidator(id);
@@ -185,7 +153,6 @@ export class ControlController {
    * @returns The updated node
    */
   @Delete('nodes/:id/validator')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   async removeNodeAsValidator(@Param('id') id: string): Promise<NodeDto> {
     this.logger.log(`Removing node with ID ${id} as validator`);
     return this.nodeService.removeAsValidator(id);
@@ -196,7 +163,6 @@ export class ControlController {
    * @returns All validator nodes
    */
   @Get('nodes/validators')
-  @UseGuards(new JwtAuthGuard(new AuthService(null, null, null)))
   async getAllValidatorNodes(): Promise<NodeDto[]> {
     this.logger.log('Getting all validator nodes');
     return this.nodeService.findAllValidators();

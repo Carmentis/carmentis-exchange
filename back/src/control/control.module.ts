@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { APP_GUARD } from '@nestjs/core';
 import { ControlController } from './control.controller';
 import { AuthService } from './auth.service';
 import { NodeService } from './node.service';
 import { AuthChallengeEntity } from './entities/auth-challenge.entity';
 import { NodeEntity } from './entities/node.entity';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -19,7 +21,14 @@ import { NodeEntity } from './entities/node.entity';
     }),
   ],
   controllers: [ControlController],
-  providers: [AuthService, NodeService],
+  providers: [
+    AuthService, 
+    NodeService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
   exports: [AuthService, NodeService, TypeOrmModule],
 })
 export class ControlModule {}
