@@ -13,7 +13,7 @@ import {
 	TokenUnit
 } from '@cmts-dev/carmentis-sdk/server';
 
-import {EnvService} from './env.service';
+import {EnvService} from './env/env.service';
 import {promises as fs} from 'fs';
 import * as path from 'path';
 

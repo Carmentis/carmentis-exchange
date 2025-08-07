@@ -9,7 +9,7 @@ import {
   Param,
   Post,
   Put,
-  Req,
+  Req, UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { NodeService } from './node.service';
@@ -20,10 +20,15 @@ import {
   AuthStatusResponseDto,
 } from './dto/auth.dto';
 import { CreateNodeDto, NodeDto, UpdateNodeDto } from './dto/node.dto';
+import { NodeStatusResponseDto } from './dto/node-status.dto';
 import { Request } from 'express';
 import { Public } from './decorators/public.decorator';
+import { EnvService } from '../env/env.service';
+import { BlockchainFacade } from '@cmts-dev/carmentis-sdk/server';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 
+@UseGuards(JwtAuthGuard)
 @Controller('/api/control')
 export class ControlController {
   private readonly logger = new Logger(ControlController.name);
@@ -31,6 +36,7 @@ export class ControlController {
   constructor(
     private readonly authService: AuthService,
     private readonly nodeService: NodeService,
+    private readonly envService: EnvService,
   ) {}
 
   /**
@@ -166,5 +172,40 @@ export class ControlController {
   async getAllValidatorNodes(): Promise<NodeDto[]> {
     this.logger.log('Getting all validator nodes');
     return this.nodeService.findAllValidators();
+  }
+
+  /**
+   * Get information about the connected node
+   * @returns The connected node information
+   */
+  @Get('connected-node')
+  async getConnectedNode(): Promise<NodeStatusResponseDto> {
+    this.logger.log('Getting connected node information');
+    
+    try {
+      // Get the node URL from the environment service
+      const nodeUrl = this.envService.nodeUrl;
+      
+      if (!nodeUrl) {
+        throw new Error('Node URL is not defined');
+      }
+      
+      // Create a provider and blockchain instance
+      const blockchain = BlockchainFacade.createFromNodeUrl(nodeUrl);
+
+      // Get the node status
+      const nodeStatus = await blockchain.getNodeStatus();
+      
+      // Return the node information
+      return {
+        address: nodeStatus.getRpcAddress() || 'Unknown RPC address',
+        url: nodeUrl,
+        status: nodeStatus,
+        chainId: nodeStatus.getChainId() || 'Unknown chain',
+      };
+    } catch (error) {
+      this.logger.error(`Error getting connected node information: ${error}`);
+      throw error;
+    }
   }
 }

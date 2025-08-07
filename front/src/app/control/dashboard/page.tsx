@@ -19,6 +19,7 @@ import {
     Toolbar,
     Typography,
     Tooltip,
+    Paper,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -26,6 +27,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import PendingIcon from '@mui/icons-material/Pending';
+import ConnectedNodeCard from '@/components/ConnectedNodeCard';
 
 export default function DashboardPage() {
     const { isAuthenticated, publicKey, logout } = useAuth();
@@ -140,106 +142,118 @@ export default function DashboardPage() {
             </AppBar>
 
             <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-                <Box sx={{ mb: 4 }}>
-                    <Typography variant="h4" gutterBottom>
-                        Blockchain Nodes
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Manage validator nodes for your blockchain network
-                    </Typography>
-                </Box>
-
-                {loading && !refreshing ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                        <CircularProgress />
-                    </Box>
-                ) : error ? (
-                    <Box sx={{ my: 4 }}>
-                        <Typography color="error" align="center">
-                            Error loading nodes: {error.message}
-                        </Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                            <Button variant="outlined" onClick={handleRefresh}>
-                                Try Again
-                            </Button>
+                <Grid container spacing={3}>
+                    {/* Connected Node Card - Side Panel */}
+                    <Grid item xs={12} md={3}>
+                        <Box sx={{ position: { md: 'sticky' }, top: { md: '24px' } }}>
+                            <ConnectedNodeCard />
                         </Box>
-                    </Box>
-                ) : nodes.length === 0 ? (
-                    <Box sx={{ my: 4 }}>
-                        <Typography align="center">No nodes found</Typography>
-                    </Box>
-                ) : (
-                    <Grid container spacing={3}>
-                        {nodes.map((node) => (
-                            <Grid item xs={12} sm={6} md={4} key={node.id}>
-                                <Card>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                            <Typography variant="h6" component="div" noWrap>
-                                                {node.name}
-                                            </Typography>
-                                            <Chip
-                                                icon={getStatusIcon(node.status)}
-                                                label={node.status}
-                                                color={getStatusChipColor(node.status) as any}
-                                                size="small"
-                                            />
-                                        </Box>
-
-                                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                                            <strong>Endpoint:</strong> {node.endpoint}
-                                        </Typography>
-
-                                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                                            <strong>Public Key:</strong>{' '}
-                                            <Tooltip title={node.publicKey}>
-                        <span>
-                          {node.publicKey.substring(0, 10)}...
-                            {node.publicKey.substring(node.publicKey.length - 4)}
-                        </span>
-                                            </Tooltip>
-                                        </Typography>
-
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                            {node.isValidator ? (
-                                                <Chip
-                                                    icon={<VerifiedUserIcon fontSize="small" />}
-                                                    label="Validator"
-                                                    color="primary"
-                                                    size="small"
-                                                />
-                                            ) : (
-                                                <Chip label="Non-Validator" size="small" variant="outlined" />
-                                            )}
-                                        </Box>
-                                    </CardContent>
-
-                                    <CardActions>
-                                        {node.isValidator ? (
-                                            <Button
-                                                size="small"
-                                                color="error"
-                                                onClick={() => handleRemoveAsValidator(node.id)}
-                                                disabled={loading}
-                                            >
-                                                Remove Validator Status
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                size="small"
-                                                color="primary"
-                                                onClick={() => handleSetAsValidator(node.id)}
-                                                disabled={loading}
-                                            >
-                                                Set as Validator
-                                            </Button>
-                                        )}
-                                    </CardActions>
-                                </Card>
-                            </Grid>
-                        ))}
                     </Grid>
-                )}
+                    
+                    {/* Main Content */}
+                    <Grid item xs={12} md={9}>
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h4" gutterBottom>
+                                Blockchain Nodes
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                Manage validator nodes for your blockchain network
+                            </Typography>
+                        </Box>
+
+                        {loading && !refreshing ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : error ? (
+                            <Box sx={{ my: 4 }}>
+                                <Typography color="error" align="center">
+                                    Error loading nodes: {error.message}
+                                </Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                    <Button variant="outlined" onClick={handleRefresh}>
+                                        Try Again
+                                    </Button>
+                                </Box>
+                            </Box>
+                        ) : nodes.length === 0 ? (
+                            <Box sx={{ my: 4 }}>
+                                <Typography align="center">No nodes found</Typography>
+                            </Box>
+                        ) : (
+                            <Grid container spacing={3}>
+                                {nodes.map((node) => (
+                                    <Grid item xs={12} sm={6} lg={4} key={node.id}>
+                                        <Card>
+                                            <CardContent>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                                    <Typography variant="h6" component="div" noWrap>
+                                                        {node.name}
+                                                    </Typography>
+                                                    <Chip
+                                                        icon={getStatusIcon(node.status)}
+                                                        label={node.status}
+                                                        color={getStatusChipColor(node.status) as any}
+                                                        size="small"
+                                                    />
+                                                </Box>
+
+                                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                    <strong>Endpoint:</strong> {node.endpoint}
+                                                </Typography>
+
+                                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                    <strong>Public Key:</strong>{' '}
+                                                    <Tooltip title={node.publicKey}>
+                                <span>
+                                  {node.publicKey.substring(0, 10)}...
+                                    {node.publicKey.substring(node.publicKey.length - 4)}
+                                </span>
+                                                    </Tooltip>
+                                                </Typography>
+
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                                                    {node.isValidator ? (
+                                                        <Chip
+                                                            icon={<VerifiedUserIcon fontSize="small" />}
+                                                            label="Validator"
+                                                            color="primary"
+                                                            size="small"
+                                                        />
+                                                    ) : (
+                                                        <Chip label="Non-Validator" size="small" variant="outlined" />
+                                                    )}
+                                                </Box>
+                                            </CardContent>
+
+                                            <CardActions>
+                                                {node.isValidator ? (
+                                                    <Button
+                                                        size="small"
+                                                        color="error"
+                                                        onClick={() => handleRemoveAsValidator(node.id)}
+                                                        disabled={loading}
+                                                    >
+                                                        Remove Validator Status
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        size="small"
+                                                        color="primary"
+                                                        onClick={() => handleSetAsValidator(node.id)}
+                                                        disabled={loading}
+                                                    >
+                                                        Set as Validator
+                                                    </Button>
+                                                )}
+                                            </CardActions>
+                                        </Card>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        )}
+                    </Grid>
+                </Grid>
             </Container>
         </Box>
     );

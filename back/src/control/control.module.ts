@@ -9,13 +9,14 @@ import { NodeService } from './node.service';
 import { AuthChallengeEntity } from './entities/auth-challenge.entity';
 import { NodeEntity } from './entities/node.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { EnvModule } from '../env/env.module';
 
 @Module({
   imports: [
+    EnvModule,
     TypeOrmModule.forFeature([AuthChallengeEntity, NodeEntity]),
     ConfigModule.forRoot(),
     JwtModule.register({
-      global: true,
       secret: process.env.JWT_SECRET || 'default-secret',
       signOptions: { expiresIn: '1d' },
     }),
@@ -24,10 +25,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
   providers: [
     AuthService, 
     NodeService,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
   ],
   exports: [AuthService, NodeService, TypeOrmModule],
 })
