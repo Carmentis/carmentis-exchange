@@ -1,11 +1,11 @@
 'use client';
 
 import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css';
+import '../globals.css';
 import 'react-toastify/dist/ReactToastify.css';
-import { ConnectionContextProvider } from '@/app/connection.context';
+import { ConnectionContextProvider } from '@/app/payment/connection.context';
 import { ToastContainer } from 'react-toastify';
-import { NotificationContextProvider } from '@/app/notification.context';
+import { NotificationContextProvider } from '@/app/payment/notification.context';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import {PublicEnvScript} from "next-runtime-env";
 

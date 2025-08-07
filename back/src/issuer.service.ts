@@ -98,7 +98,7 @@ export class IssuerService implements OnModuleInit{
 		try {
 			this.logger.log("Attempting to create the issuer account...")
 			const issuerAccount = await  blockchain.createGenesisAccount()
-			issuerAccount.setGasPrice(TOKEN);
+			issuerAccount.setGasPrice(CMTSToken.oneCMTS());
 			this.issuerAccountHash = await issuerAccount.publishUpdates();
 			this.logger.log("Issuer account created successfully !")
 			this.logger.log(`Issuer account hash: ${this.issuerAccountHash.encode()}`);
@@ -146,7 +146,7 @@ export class IssuerService implements OnModuleInit{
 			buyerPublicKey,
 			tokenAmount.getAmount(TokenUnit.ATOMIC)
 		);
-		account.setGasPrice(TOKEN);
+		account.setGasPrice(CMTSToken.oneCMTS());
 		const hash = await account.publishUpdates();
 		this.logger.log(`Token account created (${hash.encode()}) with initial account of ${tokenAmount.toString()} tokens`)
 		return hash;
@@ -163,11 +163,11 @@ export class IssuerService implements OnModuleInit{
 		const senderAccount = await blockchain.loadAccount(senderAccountHash);
 		await senderAccount.transfer({
 			account: receiverAccountHash.toBytes(),
-			amount: tokenAmount.getAmount(TokenUnit.ATOMIC),
+			amount: tokenAmount.getAmountAsAtomic(),
 			publicReference: '',
 			privateReference: ''
 		})
-		senderAccount.setGasPrice(TOKEN);
+		senderAccount.setGasPrice(CMTSToken.oneCMTS());
 		await senderAccount.publishUpdates();
 		this.logger.log(`Transfer completed successfully for ${tokenAmount} tokens at account hash ${receiverAccountHash.encode()} !`)
 

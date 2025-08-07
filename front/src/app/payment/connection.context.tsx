@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, PropsWithChildren, useContext } from 'react';
-import { useExchangeConfig } from '@/app/api';
+
+import {useExchangeConfig} from "@/hooks/useExchangeConfig";
 
 /**
  * Represents a connection interface for interacting with a specific node or network.

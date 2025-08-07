@@ -34,19 +34,12 @@ import {
 } from '@mui/material';
 import {useForm, Controller} from 'react-hook-form';
 
-import {useConnectionNodeUrl} from '@/app/connection.context';
-import {
-    useCreateTokenAccount,
-    useCardPayment,
-    useSEPAPayment,
-    useCryptoPayment,
-    CardPaymentData,
-    SEPAPaymentData,
-    CryptoPaymentData
-} from '@/app/api';
-import {useToast} from '@/app/notification.context';
-import {usePathname} from "next/navigation";
+import {useConnectionNodeUrl} from '@/app/payment/connection.context';
+import {useToast} from '@/app/payment/notification.context';
 import {CMTSToken, CurrencyConverterFactory} from "@cmts-dev/carmentis-sdk/client";
+import {useCryptoPayment} from "@/hooks/useCryptoPayment";
+import {useCardPayment} from "@/hooks/useCardPayment";
+import {useSEPAPayment} from "@/hooks/useSEPAPayment";
 
 export default function Home() {
     return (
@@ -260,7 +253,7 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
             const converter = CurrencyConverterFactory.defaultEurosToCMTSTokenConverter();
             const tokens = CMTSToken.create(tokenAmount);
             const euros = converter.invert(tokens);
-            setEuroAmount(euros.getAmount());
+            setEuroAmount(euros.getAmount().toString());
         }
     }, [tokenAmount]);
 
