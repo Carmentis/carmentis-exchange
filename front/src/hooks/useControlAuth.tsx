@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useControlConfig } from './useControlConfig';
 import { toast } from 'react-toastify';
+import {useCarmentisAuthByPublicKey} from "@/contexts/AuthModalContext";
 
 interface AuthState {
     isAuthenticated: boolean;
@@ -13,6 +14,7 @@ interface AuthState {
 
 export function useControlAuth() {
     const { CONTROL_API } = useControlConfig();
+    const authenticateByPublicKey = useCarmentisAuthByPublicKey();
     const [authState, setAuthState] = useState<AuthState>({
         isAuthenticated: false,
         token: null,
@@ -69,17 +71,25 @@ export function useControlAuth() {
         }
     };
 
-    // Sign a challenge with the wallet
+    // Sign a challenge with the wallet using the modal
     const signChallenge = async (challenge: string) => {
-        // This function would interact with a wallet extension
-        // For now, we'll just simulate it
         try {
-            // In a real implementation, this would call the wallet extension
-            // to sign the challenge
-            const signature = `simulated-signature-${Date.now()}`;
-            const publicKey = `simulated-public-key-${Date.now()}`;
-
-            return { signature, publicKey };
+            // Return a promise that resolves when the user successfully authenticates
+            return new Promise<{ signature: string, publicKey: string }>((resolve, reject) => {
+                // Show the authentication modal and handle the result
+                authenticateByPublicKey(
+                    challenge,
+                    // Success callback
+                    (signature, publicKey) => {
+                        resolve({ signature, publicKey });
+                    },
+                    // Error callback
+                    (error) => {
+                        toast.error('Failed to sign challenge with wallet');
+                        reject(error);
+                    }
+                );
+            });
         } catch (error) {
             const errorMessage = error instanceof Error ? error : new Error(String(error));
             toast.error('Failed to sign challenge with wallet');

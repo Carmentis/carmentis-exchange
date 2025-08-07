@@ -15,9 +15,11 @@ import {
 } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import {wiClient} from "@cmts-dev/carmentis-sdk/client";
+import {useCarmentisAuthByPublicKey} from "@/contexts/AuthModalContext";
 
 export default function ControlLoginPage() {
   const { isAuthenticated, loading, login } = useAuth();
+  const authenticateByPublicKey  = useCarmentisAuthByPublicKey();
   const router = useRouter();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 

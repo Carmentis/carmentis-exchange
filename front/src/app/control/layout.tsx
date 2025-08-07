@@ -7,6 +7,7 @@ import {PublicEnvScript} from "next-runtime-env";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './auth.context';
+import { AuthModalProvider } from '@/contexts/AuthModalContext';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -144,22 +145,26 @@ export default function ControlRootLayout({children}: PropsWithChildren) {
         >
         <PublicEnvScript />
         <ThemeProvider theme={theme}>
+
+            <AuthModalProvider>
             <AuthProvider>
-                <ToastContainer
-                    position="top-right"
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="light"
-                    className="glass-no-border"
-                />
-                {children}
+                    <ToastContainer
+                        position="top-right"
+                        autoClose={5000}
+                        hideProgressBar={false}
+                        newestOnTop
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                        theme="light"
+                        className="glass-no-border"
+                    />
+                    {children}
+
             </AuthProvider>
+        </AuthModalProvider>
         </ThemeProvider>
         </body>
         </html>
