@@ -6,6 +6,7 @@ import { randomBytes } from 'crypto';
 import { BytesToHexEncoder, EncoderFactory, StringSignatureEncoder } from '@cmts-dev/carmentis-sdk/server';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { AuthorizedKeysService } from './authorized-keys.service';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
     private readonly challengeRepository: Repository<AuthChallengeEntity>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly authorizedKeysService: AuthorizedKeysService,
   ) {
     this.signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
   }
@@ -98,6 +100,12 @@ export class AuthService {
       if (!isValid) {
         this.logger.error(`Invalid signature for challenge: ${challengeId}`);
         throw new UnauthorizedException('Invalid signature');
+      }
+      
+      // Check if the public key is authorized
+      if (!this.authorizedKeysService.isAuthorized(publicKey)) {
+        this.logger.error(`Unauthorized public key: ${publicKey}`);
+        throw new UnauthorizedException('Unauthorized key: Your public key is not in the authorized keys list');
       }
       
       // Update the challenge

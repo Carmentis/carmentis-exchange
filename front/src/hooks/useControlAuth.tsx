@@ -122,9 +122,20 @@ export function useControlAuth() {
 
             return response.data;
         } catch (error) {
-            const errorMessage = error instanceof Error ? error : new Error(String(error));
+            let errorMessage: Error;
+            let toastMessage = 'Failed to verify authentication';
+            
+            // Extract specific error message from axios error response if available
+            if (axios.isAxiosError(error) && error.response?.data?.message) {
+                const backendMessage = error.response.data.message;
+                errorMessage = new Error(backendMessage);
+                toastMessage = backendMessage;
+            } else {
+                errorMessage = error instanceof Error ? error : new Error(String(error));
+            }
+            
             setAuthState(prev => ({ ...prev, loading: false, error: errorMessage }));
-            toast.error('Failed to verify authentication');
+            toast.error(toastMessage);
             throw errorMessage;
         }
     };
@@ -146,9 +157,26 @@ export function useControlAuth() {
             toast.success('Authentication successful');
             return true;
         } catch (error) {
-            const errorMessage = error instanceof Error ? error : new Error(String(error));
+            // The specific error message might already be displayed by verifyChallenge
+            // But we'll handle it here as well for completeness
+            let errorMessage: Error;
+            let toastMessage = 'Authentication failed';
+            
+            // Extract specific error message from axios error response if available
+            if (axios.isAxiosError(error) && error.response?.data?.message) {
+                const backendMessage = error.response.data.message;
+                errorMessage = new Error(backendMessage);
+                // Don't show duplicate toast if the error came from verifyChallenge
+                // which already showed a toast
+                if (!error.message.includes('Failed to verify authentication')) {
+                    toastMessage = backendMessage;
+                }
+            } else {
+                errorMessage = error instanceof Error ? error : new Error(String(error));
+            }
+            
             setAuthState(prev => ({ ...prev, loading: false, error: errorMessage }));
-            toast.error('Authentication failed');
+            toast.error(toastMessage);
             return false;
         }
     };

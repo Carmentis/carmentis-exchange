@@ -68,6 +68,59 @@ Now the back-end should be running on `http://localhost:3001`, while the front-e
 
 **Note:** Ensure Docker is properly installed and running before proceeding.
 
+## Authentication System
+
+The Carmentis Control application uses a wallet-based authentication system where users authenticate by signing a challenge with their private key. The system now includes an SSH-like authorized keys feature for enhanced security.
+
+### Authorized Keys Feature
+
+Similar to SSH, users can only authenticate if their public key is listed in the `authorized_keys` file. This provides an additional layer of security by restricting access to only authorized users.
+
+#### Configuration
+
+The authorized keys feature is configured using the `CONTROL_STORAGE` environment variable:
+
+```bash
+# Directory for storing control-related files (issuer keypair and authorized keys)
+CONTROL_STORAGE=/path/to/control/storage
+```
+
+If not specified, it defaults to `./control-storage` in the current working directory.
+
+The system uses two important files:
+- `authorized_keys`: Contains the list of authorized public keys (one per line)
+- `control_key_pair.json`: Contains the issuer's key pair (previously configured with `ISSUER_KEYPAIR_FILE`)
+
+#### Adding Authorized Keys
+
+To add a public key to the authorized keys list:
+
+1. Locate the `authorized_keys` file in your `CONTROL_STORAGE` directory
+2. Add the user's public key as a new line in the file
+3. Save the file
+
+Example `authorized_keys` file:
+```
+04a9c47c0c7b80a8b...
+04e8d92c3f6a91b7c...
+```
+
+#### Docker Configuration
+
+When using Docker, make sure to mount the control storage directory:
+
+```yml
+services:
+   back:
+      image: ghcr.io/carmentis/exchange/back:latest
+      environment:
+         - CONTROL_STORAGE=/app/config
+         - NODE_URL=NODE_URL
+         - PORT=3000
+      volumes:
+         - ./control-storage:/app/config
+```
+
 ## Launch in development mode
 In development mode, two terminals are required, one for the back and another for
 the front. 

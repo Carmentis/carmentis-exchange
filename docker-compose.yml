@@ -10,8 +10,11 @@ services:
     environment:
       - NODE_URL=${NODE_URL}
       - PORT=${EXCHANGE_BACK_PORT}
+      - CONTROL_STORAGE=/app/control-storage
     ports:
       - "${EXCHANGE_BACK_PORT}:${EXCHANGE_BACK_PORT}"
+    volumes:
+      - ./control-storage:/app/control-storage
     env_file:
       - .env
 
