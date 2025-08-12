@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../auth.context';
 import { useNodes } from '@/hooks/useNodes';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 import {
     AppBar,
     Box,
@@ -14,8 +15,14 @@ import {
     Chip,
     CircularProgress,
     Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     Grid,
     IconButton,
+    Switch,
     Toolbar,
     Typography,
     Tooltip,
@@ -34,6 +41,10 @@ export default function DashboardPage() {
     const { nodes, loading, error, fetchNodes, setAsValidator, removeAsValidator } = useNodes();
     const router = useRouter();
     const [refreshing, setRefreshing] = useState(false);
+    
+    // State for confirmation modal
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [nodeToToggle, setNodeToToggle] = useState<{ id: string, makeValidator: boolean } | null>(null);
 
     // If not authenticated, redirect to login page
     useEffect(() => {
@@ -58,21 +69,33 @@ export default function DashboardPage() {
         router.push('/control');
     };
 
-    // Handle set as validator
-    const handleSetAsValidator = async (id: string) => {
-        try {
-            await setAsValidator(id);
-        } catch (error) {
-            console.error('Failed to set node as validator:', error);
-        }
+    // Handle validator switch toggle
+    const handleValidatorSwitchToggle = (id: string, currentValue: boolean) => {
+        setNodeToToggle({ id, makeValidator: !currentValue });
+        setConfirmModalOpen(true);
     };
 
-    // Handle remove as validator
-    const handleRemoveAsValidator = async (id: string) => {
+    // Handle confirmation modal close
+    const handleConfirmModalClose = () => {
+        setConfirmModalOpen(false);
+        setNodeToToggle(null);
+    };
+
+    // Handle confirmation
+    const handleConfirmToggle = async () => {
+        if (!nodeToToggle) return;
+        
         try {
-            await removeAsValidator(id);
+            if (nodeToToggle.makeValidator) {
+                await setAsValidator(nodeToToggle.id);
+            } else {
+                await removeAsValidator(nodeToToggle.id);
+            }
         } catch (error) {
-            console.error('Failed to remove node as validator:', error);
+            console.error('Failed to toggle validator status:', error);
+            // The error toast is already shown by the useNodes hook
+        } finally {
+            handleConfirmModalClose();
         }
     };
 
@@ -188,29 +211,10 @@ export default function DashboardPage() {
                                             <CardContent>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                                                     <Typography variant="h6" component="div" noWrap>
-                                                        {node.name}
+                                                        {node.id}
                                                     </Typography>
-                                                    <Chip
-                                                        icon={getStatusIcon(node.status)}
-                                                        label={node.status}
-                                                        color={getStatusChipColor(node.status) as any}
-                                                        size="small"
-                                                    />
                                                 </Box>
 
-                                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                    <strong>Endpoint:</strong> {node.endpoint}
-                                                </Typography>
-
-                                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                                    <strong>Public Key:</strong>{' '}
-                                                    <Tooltip title={node.publicKey}>
-                                <span>
-                                  {node.publicKey.substring(0, 10)}...
-                                    {node.publicKey.substring(node.publicKey.length - 4)}
-                                </span>
-                                                    </Tooltip>
-                                                </Typography>
 
                                                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                                                     {node.isValidator ? (
@@ -226,26 +230,16 @@ export default function DashboardPage() {
                                                 </Box>
                                             </CardContent>
 
-                                            <CardActions>
-                                                {node.isValidator ? (
-                                                    <Button
-                                                        size="small"
-                                                        color="error"
-                                                        onClick={() => handleRemoveAsValidator(node.id)}
-                                                        disabled={loading}
-                                                    >
-                                                        Remove Validator Status
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        size="small"
-                                                        color="primary"
-                                                        onClick={() => handleSetAsValidator(node.id)}
-                                                        disabled={loading}
-                                                    >
-                                                        Set as Validator
-                                                    </Button>
-                                                )}
+                                            <CardActions sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Validator
+                                                </Typography>
+                                                <Switch
+                                                    checked={node.isValidator}
+                                                    onChange={() => handleValidatorSwitchToggle(node.id, node.isValidator)}
+                                                    disabled={loading}
+                                                    color="primary"
+                                                />
                                             </CardActions>
                                         </Card>
                                     </Grid>
@@ -255,6 +249,35 @@ export default function DashboardPage() {
                     </Grid>
                 </Grid>
             </Container>
+
+            {/* Confirmation Modal */}
+            <Dialog
+                open={confirmModalOpen}
+                onClose={handleConfirmModalClose}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {nodeToToggle?.makeValidator 
+                        ? "Set Node as Validator" 
+                        : "Remove Node as Validator"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        {nodeToToggle?.makeValidator
+                            ? "Are you sure you want to set this node as a validator? This will allow the node to participate in consensus."
+                            : "Are you sure you want to remove this node as a validator? This will prevent the node from participating in consensus."}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleConfirmModalClose} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmToggle} color="primary" autoFocus>
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
