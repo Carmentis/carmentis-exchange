@@ -24,19 +24,6 @@ async function bootstrap() {
     });
     app.useGlobalPipes(validationPipe);
 
-    // add a rate limit on the number of requests
-    /*
-    app.use(
-        rateLimit({
-            windowMs: 15 * 60 * 1000, // 15 minutes
-            max: 100, // 100 requêtes max par IP
-        }),
-    );
-
-     */
-
-
-
     const port = process.env.PORT ?? 3000;
     logger.log(`Listening at port ${port}`)
     await app.listen(port);
