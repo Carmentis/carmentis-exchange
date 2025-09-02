@@ -10,6 +10,7 @@ import {ConfigModule, ConfigService} from '@nestjs/config';
 import {EventEmitterModule} from "@nestjs/event-emitter";
 import {StancerCardPaymentService} from "./payment/stancer/stancer-card-payment.service";
 import { EnvModule } from './env/env.module';
+import { CryptoModule } from './crypto/crypto.module';
 
 export const DB_STORAGE = 'db.sqlite';
 @Global()
@@ -18,6 +19,7 @@ export const DB_STORAGE = 'db.sqlite';
     EventEmitterModule.forRoot(),
     PaymentModule,
     ControlModule,
+      CryptoModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'sqlite',

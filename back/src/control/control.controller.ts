@@ -19,13 +19,13 @@ import {
   VerifyChallengeResponseDto,
   AuthStatusResponseDto,
 } from './dto/auth.dto';
-import { CreateNodeDto, NodeDto, UpdateNodeDto } from './dto/node.dto';
 import { NodeStatusResponseDto } from './dto/node-status.dto';
 import { Request } from 'express';
 import { Public } from './decorators/public.decorator';
 import { EnvService } from '../env/env.service';
 import { BlockchainFacade } from '@cmts-dev/carmentis-sdk/server';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { SetNodeAsValidatorRequestDto } from './dto/setNodeAsValidator/SetNodeAsValidatorRequestDto';
 
 
 @UseGuards(JwtAuthGuard)
@@ -84,118 +84,44 @@ export class ControlController {
     };
   }
 
-  /**
-   * Get all nodes
-   * @returns All nodes
-   */
-  @Get('nodes')
-  async getAllNodes(): Promise<NodeDto[]> {
-    this.logger.log('Getting all nodes');
-    return this.nodeService.findAll();
-  }
-
-  /**
-   * Get a node by ID
-   * @param id The node ID
-   * @returns The node
-   */
-  @Get('nodes/:id')
-  async getNodeById(@Param('id') id: string): Promise<NodeDto> {
-    this.logger.log(`Getting node with ID: ${id}`);
-    return this.nodeService.findOne(id);
-  }
-
-  /**
-   * Create a new node
-   * @param createNodeDto The node data
-   * @returns The created node
-   */
-  @Post('nodes')
-  async createNode(@Body() createNodeDto: CreateNodeDto): Promise<NodeDto> {
-    this.logger.log(`Creating node: ${createNodeDto.name}`);
-    return this.nodeService.create(createNodeDto);
-  }
-
-  /**
-   * Update a node
-   * @param id The node ID
-   * @param updateNodeDto The node data
-   * @returns The updated node
-   */
-  @Put('nodes/:id')
-  async updateNode(
-    @Param('id') id: string,
-    @Body() updateNodeDto: UpdateNodeDto,
-  ): Promise<NodeDto> {
-    this.logger.log(`Updating node with ID: ${id}`);
-    return this.nodeService.update(id, updateNodeDto);
-  }
-
-  /**
-   * Delete a node
-   * @param id The node ID
-   */
-  @Delete('nodes/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteNode(@Param('id') id: string): Promise<void> {
-    this.logger.log(`Deleting node with ID: ${id}`);
-    return this.nodeService.remove(id);
-  }
-
-  /**
-   * Set a node as a validator
-   * @param id The node ID
-   * @returns The updated node
-   */
-  @Put('nodes/:id/validator')
-  async setNodeAsValidator(@Param('id') id: string): Promise<NodeDto> {
-    this.logger.log(`Setting node with ID ${id} as validator`);
-    return this.nodeService.setAsValidator(id);
-  }
-
-  /**
-   * Remove a node as a validator
-   * @param id The node ID
-   * @returns The updated node
-   */
-  @Delete('nodes/:id/validator')
-  async removeNodeAsValidator(@Param('id') id: string): Promise<NodeDto> {
-    this.logger.log(`Removing node with ID ${id} as validator`);
-    return this.nodeService.removeAsValidator(id);
-  }
-
-  /**
-   * Get all validator nodes
-   * @returns All validator nodes
-   */
-  @Get('nodes/validators')
-  async getAllValidatorNodes(): Promise<NodeDto[]> {
-    this.logger.log('Getting all validator nodes');
-    return this.nodeService.findAllValidators();
+  @Put('nodes/validator')
+  async setNodeAsValidator(
+    @Body() body: SetNodeAsValidatorRequestDto,
+  ): Promise<boolean> {
+    const { nodePublicKey, nodePublicKeyType } = body;
+    this.logger.log(
+      `Setting node with Public Key ${nodePublicKey} as validator`,
+    );
+    if (body.asValidator) {
+      return this.nodeService.setAsValidator(nodePublicKey, nodePublicKeyType);
+    } else {
+      return this.nodeService.setAsReplicator(nodePublicKey, nodePublicKeyType);
+    }
   }
 
   /**
    * Get information about the connected node
    * @returns The connected node information
    */
-  @Get('connected-node')
-  async getConnectedNode(): Promise<NodeStatusResponseDto> {
+  @Get('connectedNode')
+  async getConnectedNode(): Promise<{ nodeEndpoint: string }> {
     this.logger.log('Getting connected node information');
-    
+    return { nodeEndpoint: this.envService.nodeUrl };
+    /*
     try {
       // Get the node URL from the environment service
       const nodeUrl = this.envService.nodeUrl;
-      
+
       if (!nodeUrl) {
         throw new Error('Node URL is not defined');
       }
-      
+
       // Create a provider and blockchain instance
       const blockchain = BlockchainFacade.createFromNodeUrl(nodeUrl);
 
       // Get the node status
       const nodeStatus = await blockchain.getNodeStatus();
-      
+
       // Return the node information
       return {
         address: nodeStatus.getRpcAddress() || 'Unknown RPC address',
@@ -207,5 +133,7 @@ export class ControlController {
       this.logger.error(`Error getting connected node information: ${error}`);
       throw error;
     }
+
+     */
   }
 }

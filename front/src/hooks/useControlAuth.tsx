@@ -3,10 +3,11 @@ import axios from 'axios';
 import { useControlConfig } from './useControlConfig';
 import { toast } from 'react-toastify';
 import {useCarmentisAuthByPublicKey} from "@/contexts/AuthModalContext";
+import useAuthenticatedApiClient from "@/hooks/useAuthenticatedApiClient";
+import {useTokenJWT} from "@/hooks/useTokenJWT";
 
 interface AuthState {
     isAuthenticated: boolean;
-    token: string | null;
     publicKey: string | null;
     loading: boolean;
     error: Error | null;
@@ -14,10 +15,11 @@ interface AuthState {
 
 export function useControlAuth() {
     const { CONTROL_API } = useControlConfig();
+    const {client} = useAuthenticatedApiClient()
+    const {token, setToken, clearToken} = useTokenJWT();
     const authenticateByPublicKey = useCarmentisAuthByPublicKey();
     const [authState, setAuthState] = useState<AuthState>({
         isAuthenticated: false,
-        token: null,
         publicKey: null,
         loading: false,
         error: null,
@@ -25,31 +27,26 @@ export function useControlAuth() {
 
     // Initialize auth state from localStorage on mount
     useEffect(() => {
-        const storedToken = localStorage.getItem('controlAuthToken');
         const storedPublicKey = localStorage.getItem('controlAuthPublicKey');
 
-        if (storedToken && storedPublicKey) {
+        if (storedPublicKey) {
             setAuthState({
                 isAuthenticated: true,
-                token: storedToken,
                 publicKey: storedPublicKey,
                 loading: false,
                 error: null,
             });
 
             // Verify the token is still valid
-            verifyToken(storedToken);
+
         }
-    }, []);
+    }, [token]);
 
     // Verify token validity
     const verifyToken = async (token: string) => {
+
         try {
-            await axios.get(`${CONTROL_API}/auth/status`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            await client.get("/auth/status")
         } catch (error) {
             // If token is invalid, log out
             logout();
@@ -61,7 +58,7 @@ export function useControlAuth() {
         setAuthState(prev => ({ ...prev, loading: true, error: null }));
 
         try {
-            const response = await axios.post(`${CONTROL_API}/auth/challenge`);
+            const response = await client.post(`/auth/challenge`);
             return response.data;
         } catch (error) {
             const errorMessage = error instanceof Error ? error : new Error(String(error));
@@ -107,17 +104,13 @@ export function useControlAuth() {
             });
 
             const { token } = response.data;
-
-            // Store auth data
-            localStorage.setItem('controlAuthToken', token);
+            setToken(token);
             localStorage.setItem('controlAuthPublicKey', publicKey);
-
             setAuthState({
                 isAuthenticated: true,
-                token,
-                publicKey,
                 loading: false,
                 error: null,
+                publicKey,
             });
 
             return response.data;
@@ -183,12 +176,11 @@ export function useControlAuth() {
 
     // Logout
     const logout = useCallback(() => {
-        localStorage.removeItem('controlAuthToken');
+        clearToken()
         localStorage.removeItem('controlAuthPublicKey');
 
         setAuthState({
             isAuthenticated: false,
-            token: null,
             publicKey: null,
             loading: false,
             error: null,

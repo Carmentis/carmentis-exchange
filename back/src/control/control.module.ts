@@ -11,10 +11,12 @@ import { AuthChallengeEntity } from './entities/auth-challenge.entity';
 import { NodeEntity } from './entities/node.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { EnvModule } from '../env/env.module';
+import { CryptoModule } from '../crypto/crypto.module';
 
 @Module({
   imports: [
     EnvModule,
+      CryptoModule,
     TypeOrmModule.forFeature([AuthChallengeEntity, NodeEntity]),
     ConfigModule.forRoot(),
     JwtModule.register({

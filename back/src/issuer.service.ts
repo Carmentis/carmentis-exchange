@@ -1,191 +1,206 @@
-import {BadRequestException, Injectable, Logger, NotFoundException, OnModuleInit} from '@nestjs/common';
-//import * as sdk from '@cmts-dev/carmentis-sdk/server';
+import { BadRequestException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import {
-	Blockchain,
-	CMTSToken,
-	Hash,
-	PrivateSignatureKey,
-	ProviderFactory,
-	PublicSignatureKey,
-	Secp256k1PrivateSignatureKey,
-	StringSignatureEncoder,
-	TOKEN,
-	TokenUnit
+  Blockchain,
+  CMTSToken,
+  Hash,
+  PrivateSignatureKey,
+  ProviderFactory,
+  PublicSignatureKey,
+  Secp256k1PrivateSignatureKey,
+  StringSignatureEncoder,
+  TokenUnit
 } from '@cmts-dev/carmentis-sdk/server';
 
-import {EnvService} from './env/env.service';
-import {promises as fs} from 'fs';
-import * as path from 'path';
+import { EnvService } from './env/env.service';
 
+import { CryptoService } from './crypto/crypto.service';
+
+/**
+ * Maximum allowed token transfer amount to prevent accidental large transfers
+ */
 const MAXIMAL_ALLOWED_TOKEN_TRANSFER = 1000000;
 
+/**
+ * Service responsible for managing the issuer account and token operations
+ * on the Carmentis blockchain.
+ */
 @Injectable()
-export class IssuerService implements OnModuleInit{
-	private logger = new Logger(IssuerService.name);
-	private issuerAccountHash: Hash;
-	private issuerPrivateKey: PrivateSignatureKey;
-
-	constructor(
-		private readonly envService: EnvService
-	) {
-	}
-
-	async onModuleInit() {
-		this.logger.log("Creating root account");
-
-		const keyPairFilePath = this.envService.issuerKeyPairFile;
-		const defaultKeyPairFilePath = path.join(process.cwd(), './issuer-keypair.json');
-		let issuerPrivateKey: PrivateSignatureKey = Secp256k1PrivateSignatureKey.gen();
-		let issuerPublicKey = issuerPrivateKey.getPublicKey();
-		const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
-		try {
-			// Check if the key pair file exists
-			const keyPairFile = await fs.readFile(keyPairFilePath || defaultKeyPairFilePath, 'utf8');
-			const { privateKey, publicKey }: {privateKey: string, publicKey: string} = JSON.parse(keyPairFile);
-
-			if (privateKey && publicKey) {
-				issuerPrivateKey = encoder.decodePrivateKey(privateKey);
-				issuerPublicKey = encoder.decodePublicKey(publicKey);
-				this.logger.log(`Loaded existing key pair from file: public key ${issuerPublicKey.getPublicKeyAsString()}`);
-			} else {
-				throw new Error('Invalid key pair file, generating a new pair...');
-			}
-		} catch (err) {
-			// If file is not found or invalid, generate a new key pair
-			this.logger.warn('Key pair file not found or invalid, generating a new pair...');
+export class IssuerService implements OnModuleInit {
+  private readonly logger = new Logger(IssuerService.name);
+  private issuerAccountHash: Hash;
 
 
-			const keyPair = JSON.stringify(
-				{
-					privateKey: encoder.encodePrivateKey(issuerPrivateKey),
-					publicKey: encoder.encodePublicKey(issuerPublicKey),
-				},
-				null,
-				2,
-			);
+  constructor(private readonly envService: EnvService, private readonly cryptoService: CryptoService) {}
 
-			if (keyPairFilePath) {
-				await fs.writeFile(keyPairFilePath, keyPair);
-				this.logger.log(`New key pair generated and saved to file ${keyPairFilePath}`);
-			} else {
-				await fs.writeFile(defaultKeyPairFilePath, keyPair);
-				this.logger.log(`New key pair generated and saved to (default) file ${defaultKeyPairFilePath}`);
-			}
-		}
+  /**
+   * Initializes the issuer service by loading or creating key pairs
+   * and setting up the issuer account on the blockchain.
+   */
+  async onModuleInit(): Promise<void> {
+    this.logger.log("Initializing issuer service");
+      // Initialize blockchain connection
+      const issuerPrivateKey = this.cryptoService.getIssuerPrivateKey();
+      const blockchain = this.createBlockchainConnection(issuerPrivateKey);
+      const publicKey = issuerPrivateKey.getPublicKey();
 
-		// set the issuer private key
-		this.issuerPrivateKey = issuerPrivateKey;
-		const provider = ProviderFactory.createKeyedProviderExternalProvider(issuerPrivateKey, this.envService.nodeUrl);
-		const blockchain = Blockchain.createFromProvider(provider);
-		const explorer = blockchain.getExplorer();
-
-		// check if the issuer account already exists, in such case only loads
-		// the hash of the issuer's account
-		this.logger.log(`Checking existence of issuer account based on the public key ${issuerPublicKey.getPublicKeyAsString()}`);
-		try {
-			this.issuerAccountHash = await explorer.getAccountByPublicKey(issuerPublicKey);
-			this.logger.log(`Issuer account located at hash ${this.issuerAccountHash.encode()}`);
-		}catch (e) {
-			this.logger.warn(`Issuer account not found (${e})`);
-			console.error(e);
-			this.logger.warn("Attempting to create the issuer account...")
-			await this.createIssuerAccount(blockchain);
-		}
-
-	}
-
-	private async createIssuerAccount(blockchain: Blockchain) {
-		try {
-			this.logger.log("Attempting to create the issuer account...")
-			const issuerAccount = await  blockchain.createGenesisAccount()
-			issuerAccount.setGasPrice(CMTSToken.oneCMTS());
-			this.issuerAccountHash = await issuerAccount.publishUpdates();
-			this.logger.log("Issuer account created successfully !")
-			this.logger.log(`Issuer account hash: ${this.issuerAccountHash.encode()}`);
-		} catch (e) {
-			this.logger.error(`Issuer account creation failure: ${e}`)
-			console.error(e);
-		}
-	}
-
-	async creditTokenAccount(buyerPublicKey: PublicSignatureKey, tokenAmount: CMTSToken ) {
-		// no token can be credit if the issuer account is not found
-		if (!this.issuerAccountHash)
-			throw new NotFoundException("Issuer account not found");
-
-		// cap the maximal number of tokens
-		if (MAXIMAL_ALLOWED_TOKEN_TRANSFER >= 0 && MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount.getAmount())
-			throw new BadRequestException(`Maximal amount of token transfer reached: Currently limited to ${MAXIMAL_ALLOWED_TOKEN_TRANSFER}`)
-
-		// create the explorer and the blockchain
-		const nodeUrl = this.envService.nodeUrl;
-		const provider = ProviderFactory.createKeyedProviderExternalProvider(this.issuerPrivateKey, nodeUrl);
-		const blockchain = Blockchain.createFromProvider(provider);
-		const explorer = blockchain.getExplorer();
+      // Initialize issuer account
+      await this.initializeIssuerAccount(blockchain, publicKey);
+  }
 
 
-		// attempt to access the token account
-		const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
-		this.logger.debug(`Attempting to credit ${tokenAmount} tokens to the account associated to the public key ${buyerPublicKey.getPublicKeyAsString()} (or tagged public key ${signatureEncoder.encodePublicKey(buyerPublicKey)})`);
-		try {
-			const buyerAccountHash = await explorer.getAccountByPublicKey(buyerPublicKey);
-			await this.creditAccount(blockchain, buyerAccountHash, tokenAmount)
-		} catch (e) {
-			this.logger.warn(e)
-			await this.createAndCreditAccount(blockchain, buyerPublicKey, tokenAmount)
-		}
 
+  /**
+   * Creates a blockchain connection using the provided private key
+   * @param privateKey The private key to use for the connection
+   * @returns A Blockchain instance
+   */
+  private createBlockchainConnection(privateKey: PrivateSignatureKey): Blockchain {
+    const provider = ProviderFactory.createKeyedProviderExternalProvider(
+      privateKey,
+      this.envService.nodeUrl
+    );
+    return Blockchain.createFromProvider(provider);
+  }
 
-	}
+  /**
+   * Initializes the issuer account by checking if it exists or creating it
+   * @param blockchain The blockchain instance
+   * @param publicKey The public key of the issuer
+   */
+  private async initializeIssuerAccount(blockchain: Blockchain, publicKey: PublicSignatureKey): Promise<void> {
+    const explorer = blockchain.getExplorer();
 
+    // Check if the issuer account already exists
+    this.logger.log(`Checking existence of issuer account based on the public key ${publicKey.getPublicKeyAsString()}`);
+    try {
+      this.issuerAccountHash = await explorer.getAccountByPublicKey(publicKey);
+      this.logger.log(`Issuer account located at hash ${this.issuerAccountHash.encode()}`);
+    } catch (error) {
+      this.logger.warn(`Issuer account not found: ${error}`);
+      await this.createIssuerAccount(blockchain);
+    }
+  }
 
-	private async createAndCreditAccount(blockchain: Blockchain, buyerPublicKey: PublicSignatureKey, tokenAmount: CMTSToken) {
-		this.logger.log("Creating token account...");
-		const account = await blockchain.createAccount(
-			this.issuerAccountHash,
-			buyerPublicKey,
-			tokenAmount.getAmount(TokenUnit.ATOMIC)
-		);
-		account.setGasPrice(CMTSToken.oneCMTS());
-		const hash = await account.publishUpdates();
-		this.logger.log(`Token account created (${hash.encode()}) with initial account of ${tokenAmount.toString()} tokens`)
-		return hash;
-	}
+  /**
+   * Creates a new issuer account on the blockchain
+   * @param blockchain The blockchain instance
+   * @throws Error if account creation fails
+   */
+  private async createIssuerAccount(blockchain: Blockchain): Promise<void> {
+    try {
+      this.logger.log("Creating issuer account...");
+      const issuerAccount = await blockchain.createGenesisAccount();
+      issuerAccount.setGasPrice(CMTSToken.oneCMTS());
+      this.issuerAccountHash = await issuerAccount.publishUpdates();
+      this.logger.log(`Issuer account created successfully at hash ${this.issuerAccountHash.encode()}`);
+    } catch (error) {
+      this.logger.error(`Issuer account creation failed: ${error}`);
+      throw new Error(`Failed to create issuer account: ${error}`);
+    }
+  }
 
-	private async creditAccount(blockchain: Blockchain, receiverAccountHash: Hash , tokenAmount: CMTSToken) {
-		this.logger.log(`Transferring ${tokenAmount.toString()} tokens from root account to existing buyer account`);
-		const explorer = blockchain.getExplorer();
+  /**
+   * Credits tokens to a buyer's account
+   * @param buyerPublicKey The public key of the buyer
+   * @param tokenAmount The amount of tokens to credit
+   * @throws NotFoundException if issuer account is not found
+   * @throws BadRequestException if token amount exceeds maximum allowed
+   */
+  async creditTokenAccount(buyerPublicKey: PublicSignatureKey, tokenAmount: CMTSToken): Promise<void> {
+    // Validate issuer account exists
+    if (!this.issuerAccountHash) {
+      throw new NotFoundException("Issuer account not found");
+    }
 
-		// load the accounts
-		const senderAccountHash  = await explorer.getAccountByPublicKey(this.issuerPrivateKey.getPublicKey());
+    // Validate token amount
+    if (MAXIMAL_ALLOWED_TOKEN_TRANSFER >= 0 && MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount.getAmount()) {
+      throw new BadRequestException(
+        `Maximal amount of token transfer reached: Currently limited to ${MAXIMAL_ALLOWED_TOKEN_TRANSFER}`
+      );
+    }
 
-		// perform the transfer
-		const senderAccount = await blockchain.loadAccount(senderAccountHash);
-		await senderAccount.transfer({
-			account: receiverAccountHash.toBytes(),
-			amount: tokenAmount.getAmountAsAtomic(),
-			publicReference: '',
-			privateReference: ''
-		})
-		senderAccount.setGasPrice(CMTSToken.oneCMTS());
-		await senderAccount.publishUpdates();
-		this.logger.log(`Transfer completed successfully for ${tokenAmount} tokens at account hash ${receiverAccountHash.encode()} !`)
+    // Create blockchain connection
+    const blockchain = this.createBlockchainConnection(this.cryptoService.getIssuerPrivateKey());
+    const explorer = blockchain.getExplorer();
 
-		/*
-		const vb = new sdk.blockchain.accountVb(this.issuerAccountHash);
-		await vb.load();
+    // Log the operation
+    const signatureEncoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+    this.logger.debug(
+      `Crediting ${tokenAmount} tokens to account with public key ${buyerPublicKey.getPublicKeyAsString()}`
+    );
 
-		const transfer = vb.createTransfer(buyerAccountHash, tokenAmount * sdk.constants.ECO.TOKEN);
-		transfer.addPublicReference("public ref");
-		transfer.addPrivateReference("private ref");
-		await transfer.commit();
+    try {
+      // Try to find existing account
+      const buyerAccountHash = await explorer.getAccountByPublicKey(buyerPublicKey);
+      await this.creditExistingAccount(blockchain, buyerAccountHash, tokenAmount);
+    } catch (error) {
+      // Account doesn't exist, create a new one
+      this.logger.warn(`Buyer account not found: ${error}`);
+      await this.createAndCreditNewAccount(blockchain, buyerPublicKey, tokenAmount);
+    }
+  }
 
+  /**
+   * Creates a new account for a buyer and credits it with tokens
+   * @param blockchain The blockchain instance
+   * @param buyerPublicKey The public key of the buyer
+   * @param tokenAmount The amount of tokens to credit
+   * @returns The hash of the created account
+   */
+  private async createAndCreditNewAccount(
+    blockchain: Blockchain,
+    buyerPublicKey: PublicSignatureKey,
+    tokenAmount: CMTSToken
+  ): Promise<Hash> {
+    this.logger.log("Creating new token account...");
 
-		vb.setGasPrice(sdk.constants.ECO.TOKEN);
-		await vb.sign();
+    const account = await blockchain.createAccount(
+      this.issuerAccountHash,
+      buyerPublicKey,
+      tokenAmount.getAmount(TokenUnit.ATOMIC)
+    );
 
-		await vb.publish();
+    account.setGasPrice(CMTSToken.oneCMTS());
+    const hash = await account.publishUpdates();
 
-		 */
-	}
+    this.logger.log(
+      `Token account created (${hash.encode()}) with initial balance of ${tokenAmount.toString()} tokens`
+    );
+
+    return hash;
+  }
+
+  /**
+   * Credits tokens to an existing account
+   * @param blockchain The blockchain instance
+   * @param receiverAccountHash The hash of the receiver's account
+   * @param tokenAmount The amount of tokens to credit
+   */
+  private async creditExistingAccount(
+    blockchain: Blockchain,
+    receiverAccountHash: Hash,
+    tokenAmount: CMTSToken
+  ): Promise<void> {
+    this.logger.log(
+      `Transferring ${tokenAmount.toString()} tokens to existing account at ${receiverAccountHash.encode()}`
+    );
+
+    const explorer = blockchain.getExplorer();
+    const senderAccountHash = await explorer.getAccountByPublicKey(this.cryptoService.getIssuerPublicKey());
+    const senderAccount = await blockchain.loadAccount(senderAccountHash);
+
+    await senderAccount.transfer({
+      account: receiverAccountHash.toBytes(),
+      amount: tokenAmount.getAmountAsAtomic(),
+      publicReference: '',
+      privateReference: ''
+    });
+
+    senderAccount.setGasPrice(CMTSToken.oneCMTS());
+    await senderAccount.publishUpdates();
+
+    this.logger.log(
+      `Transfer of ${tokenAmount} tokens completed successfully to account ${receiverAccountHash.encode()}`
+    );
+  }
 }

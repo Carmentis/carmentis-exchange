@@ -13,14 +13,15 @@ import {
 } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 import InfoIcon from '@mui/icons-material/Info';
-import { useConnectedNode } from '@/hooks/useConnectedNode';
+import { useConnectedNodeStatus } from '@/hooks/useConnectedNodeStatus';
+import {useConnectedNodeEndpoint} from "@/hooks/useConnectedNodeEndpoint";
 
 interface ConnectedNodeCardProps {
   className?: string;
 }
 
 export default function ConnectedNodeCard({ className }: ConnectedNodeCardProps) {
-  const { nodeInfo, loading, error } = useConnectedNode();
+  const { nodeEndpoint, nodeStatus, loading, error } = useConnectedNodeStatus();
 
   return (
     <Card className={className} sx={{ height: '100%' }}>
@@ -45,54 +46,17 @@ export default function ConnectedNodeCard({ className }: ConnectedNodeCardProps)
           <Typography color="error" variant="body2">
             Error loading node information: {error.message}
           </Typography>
-        ) : nodeInfo ? (
+        ) : nodeStatus ? (
           <>
+
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              <strong>Address:</strong>{' '}
-              <Tooltip title={nodeInfo.address}>
-                <span>
-                  {nodeInfo.address.length > 20
-                    ? `${nodeInfo.address.substring(0, 10)}...${nodeInfo.address.substring(
-                        nodeInfo.address.length - 4
-                      )}`
-                    : nodeInfo.address}
-                </span>
-              </Tooltip>
+              <strong>URL:</strong> {nodeEndpoint}
             </Typography>
 
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              <strong>URL:</strong> {nodeInfo.url}
+              <strong>Chain:</strong> {nodeStatus.getChainId()}
             </Typography>
 
-            {nodeInfo.version && (
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                <strong>Version:</strong> {nodeInfo.version}
-              </Typography>
-            )}
-
-            <Divider sx={{ my: 1.5 }} />
-
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                <strong>Status:</strong>
-              </Typography>
-              
-              {nodeInfo.status && typeof nodeInfo.status === 'object' ? (
-                <Box sx={{ pl: 2 }}>
-                  {Object.entries(nodeInfo.status)
-                    .filter(([key]) => key !== 'address' && key !== 'version')
-                    .map(([key, value]) => (
-                      <Typography key={key} variant="body2" color="text.secondary" gutterBottom>
-                        <strong>{key}:</strong> {String(value)}
-                      </Typography>
-                    ))}
-                </Box>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No detailed status available
-                </Typography>
-              )}
-            </Box>
           </>
         ) : (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', my: 2 }}>
