@@ -41,10 +41,13 @@ export class IssuerService implements OnModuleInit {
       // Initialize blockchain connection
       const issuerPrivateKey = this.cryptoService.getIssuerPrivateKey();
       const blockchain = this.createBlockchainConnection(issuerPrivateKey);
-      const publicKey = issuerPrivateKey.getPublicKey();
+      const issuerAccountPublicKey = issuerPrivateKey.getPublicKey();
 
       // Initialize issuer account
-      await this.initializeIssuerAccount(blockchain, publicKey);
+      const isIssuerExists = await this.checkAccountExistence(blockchain, issuerAccountPublicKey);
+      if (!isIssuerExists) {
+          throw new Error("Issuer not found on chain");
+      }
   }
 
 
@@ -63,11 +66,11 @@ export class IssuerService implements OnModuleInit {
   }
 
   /**
-   * Initializes the issuer account by checking if it exists or creating it
+   * Initializes the issuer account by checking if it exists.
    * @param blockchain The blockchain instance
    * @param publicKey The public key of the issuer
    */
-  private async initializeIssuerAccount(blockchain: Blockchain, publicKey: PublicSignatureKey): Promise<void> {
+  private async checkAccountExistence(blockchain: Blockchain, publicKey: PublicSignatureKey): Promise<boolean> {
     const explorer = blockchain.getExplorer();
 
     // Check if the issuer account already exists
@@ -75,27 +78,11 @@ export class IssuerService implements OnModuleInit {
     try {
       this.issuerAccountHash = await explorer.getAccountByPublicKey(publicKey);
       this.logger.log(`Issuer account located at hash ${this.issuerAccountHash.encode()}`);
+      return true;
     } catch (error) {
       this.logger.warn(`Issuer account not found: ${error}`);
-      await this.createIssuerAccount(blockchain);
-    }
-  }
-
-  /**
-   * Creates a new issuer account on the blockchain
-   * @param blockchain The blockchain instance
-   * @throws Error if account creation fails
-   */
-  private async createIssuerAccount(blockchain: Blockchain): Promise<void> {
-    try {
-      this.logger.log("Creating issuer account...");
-      const issuerAccount = await blockchain.createGenesisAccount();
-      issuerAccount.setGasPrice(CMTSToken.oneCMTS());
-      this.issuerAccountHash = await issuerAccount.publishUpdates();
-      this.logger.log(`Issuer account created successfully at hash ${this.issuerAccountHash.encode()}`);
-    } catch (error) {
-      this.logger.error(`Issuer account creation failed: ${error}`);
-      throw new Error(`Failed to create issuer account: ${error}`);
+      //await this.createIssuerAccount(blockchain);
+        return false;
     }
   }
 
