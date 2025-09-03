@@ -3,7 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthChallengeEntity } from './entities/auth-challenge.entity';
 import { randomBytes } from 'crypto';
-import { BytesToHexEncoder, EncoderFactory, StringSignatureEncoder } from '@cmts-dev/carmentis-sdk/server';
+import {
+    BytesToHexEncoder,
+    EncoderFactory,
+    SignatureEncoderInterface,
+    StringSignatureEncoder,
+} from '@cmts-dev/carmentis-sdk/server';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthorizedKeysService } from './authorized-keys.service';
@@ -11,7 +16,7 @@ import { AuthorizedKeysService } from './authorized-keys.service';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private readonly signatureEncoder: StringSignatureEncoder;
+  private readonly signatureEncoder: SignatureEncoderInterface<string>;
 
   constructor(
     @InjectRepository(AuthChallengeEntity)
