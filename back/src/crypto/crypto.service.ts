@@ -6,9 +6,9 @@ import {
     PublicSignatureKey, Secp256k1PrivateSignatureKey, StringSignatureEncoder,
 } from '@cmts-dev/carmentis-sdk/server';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { EnvService } from 'src/env/env.service';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { ControlConfigService } from '../config/services/ControlConfigService';
 
 @Injectable()
 export class CryptoService implements OnModuleInit {
@@ -16,19 +16,16 @@ export class CryptoService implements OnModuleInit {
     private logger = new Logger(CryptoService.name);
 
     constructor(
-        private readonly envService: EnvService,
+        private readonly controlConfig: ControlConfigService,
     ) {}
 
 
     async onModuleInit(): Promise<void> {
         this.logger.log("Initializing issuer service");
-
-        // Load or generate key pair
-        const keyPairResult = await this.loadOrGenerateKeyPair();
-        this.issuerPrivateKey = keyPairResult.privateKey;
-
-
+        this.issuerPrivateKey = await this.loadIssuerPrivateKeyFromConfig();
     }
+
+
 
 
     getIssuerPrivateKey() {
@@ -36,49 +33,63 @@ export class CryptoService implements OnModuleInit {
     }
 
     /**
-     * Loads an existing key pair or generates a new one if not found
-     * @returns Object containing the private and public keys
+     * This method returns the private key from the control configuration.
+     * @private
      */
-    private async loadOrGenerateKeyPair(): Promise<{ privateKey: PrivateSignatureKey; publicKey: PublicSignatureKey }> {
-        const keyPairFilePath = this.envService.issuerKeyPairFile;
-        const defaultKeyPairFilePath = path.join(process.cwd(), './issuer-keypair.json');
-        const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
-
-        // Default to a new key pair
-        let issuerPrivateKey: PrivateSignatureKey = Secp256k1PrivateSignatureKey.gen();
-        let issuerPublicKey = issuerPrivateKey.getPublicKey();
-
-        try {
-            // Try to load existing key pair
-            const keyPairFile = await fs.readFile(keyPairFilePath || defaultKeyPairFilePath, 'utf8');
-            const { privateKey, publicKey }: { privateKey: string; publicKey: string } = JSON.parse(keyPairFile);
-
-            if (privateKey && publicKey) {
-                issuerPrivateKey = encoder.decodePrivateKey(privateKey);
-                issuerPublicKey = encoder.decodePublicKey(publicKey);
-                this.logger.log(`Loaded existing key pair from file: public key ${issuerPublicKey.getPublicKeyAsString()}`);
-            } else {
-                throw new Error('Invalid key pair file, generating a new pair...');
-            }
-        } catch (err) {
-            // If file is not found or invalid, generate and save a new key pair
-            this.logger.warn('Key pair file not found or invalid, generating a new pair...');
-
-            const keyPair = JSON.stringify(
-                {
-                    privateKey: encoder.encodePrivateKey(issuerPrivateKey),
-                    publicKey: encoder.encodePublicKey(issuerPublicKey),
-                },
-                null,
-                2
-            );
-
-            const targetPath = keyPairFilePath || defaultKeyPairFilePath;
-            await fs.writeFile(targetPath, keyPair);
-            this.logger.log(`New key pair generated and saved to file ${targetPath}`);
+    private async loadIssuerPrivateKeyFromConfig(): Promise<PrivateSignatureKey> {
+        const {path, sk, env} = this.controlConfig.getPrivateKeyRetrievalMethods();
+        if (typeof path === 'string') {
+            this.logger.log(`Loading issuer private key from file ${path}`)
+            return await this.loadIssuerPrivateKeyFromPath(path);
+        } else if (typeof env === 'string') {
+            this.logger.log(`Loading issuer private key from env var ${env}`)
+            return await this.loadIssuerPrivateKeyFromEnvVar(env)
+        } else if (typeof sk === 'string') {
+            this.logger.log(`Loading issuer private key from config`)
+            return await this.loadIssuerPrivateKeyFromEncodedPrivateKey(sk);
+        } else {
+            throw new Error('No private key retrieval method specified: Have you added private key to the config?')
         }
+    }
+    
+    private async loadIssuerPrivateKeyFromEnvVar(envVarName: string) {
+        const privateKey = process.env[envVarName];
+        if (typeof privateKey === 'string') {
+            const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+            return encoder.decodePrivateKey(privateKey);
+        } else {
+            throw new Error(`Private key specified in env var name ${envVarName} but not defined.`)
+        }
+    }
+    
+    private async loadIssuerPrivateKeyFromEncodedPrivateKey(encodedPrivateKey: string) {
+        const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+        return encoder.decodePrivateKey(encodedPrivateKey);
+    }
+    
+    private async loadIssuerPrivateKeyFromPath(path: string) {
+        // We expect the specified file: 1) to exist, 2) to be a json file,
+        // 3) to have a privateKey field containing the encoded private key.
+        try {
+            // Read file content (will throw if file does not exist)
+            const content = await fs.readFile(path, 'utf8');
 
-        return { privateKey: issuerPrivateKey, publicKey: issuerPublicKey };
+            // Parse JSON (will throw if invalid JSON)
+            const data = JSON.parse(content);
+
+            const encoded: unknown = data?.privateKey;
+            if (typeof encoded !== 'string' || encoded.trim().length === 0) {
+                throw new Error('Invalid or missing "privateKey" field');
+            }
+
+            const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+            const privKey = encoder.decodePrivateKey(encoded);
+            this.logger.log(`Loaded issuer private key from file: ${path}`);
+            return privKey;
+        } catch (err: any) {
+            const reason = err?.message ? `: ${err.message}` : '';
+            throw new Error(`Failed to load issuer private key from path "${path}"${reason}`);
+        }
     }
 
     getIssuerPublicKey() {

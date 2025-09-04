@@ -1,18 +1,16 @@
 import {Body, Controller, Get, Logger, Post} from '@nestjs/common';
-import { AccountCreditDto } from '../dto/account-credit.dto';
 import { IssuerService } from './issuer.service';
-import { EnvService } from './env/env.service';
 import {CMTSToken, StringSignatureEncoder} from "@cmts-dev/carmentis-sdk/server";
 import {OnEvent} from "@nestjs/event-emitter";
-import {CardPaymentService} from "./payment/card-payment.interface";
 import {StancerCardPaymentService} from "./payment/stancer/stancer-card-payment.service";
+import { ControlConfigService } from './config/services/ControlConfigService';
 
 @Controller()
 export class AppController {
 	private logger = new Logger(AppController.name)
 	constructor(
 		private readonly issuerService: IssuerService,
-		private readonly envService: EnvService,
+		private readonly controlConfig: ControlConfigService,
 		private paymentService: StancerCardPaymentService
 	) {}
 
@@ -38,7 +36,7 @@ export class AppController {
 	@Get("/networkConfig")
 	getNetworkConfig() {
 		return {
-			nodeUrl: this.envService.nodeUrl
+			nodeUrl: this.controlConfig.getNodeUrl(),
 		}
 	}
 }

@@ -1,3 +1,7 @@
+# configs
+**/*config.toml
+!example-config.toml
+
 *.sqlite
 *keypair.json
 # compiled output

@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
-import { EnvService } from '../env/env.service';
-import { EnvModule } from '../env/env.module';
 import { CryptoService } from './crypto.service';
+import { ControlConfigModule } from '../config/control-config.module';
 
 @Module({
-    imports: [EnvModule],
+    imports: [ControlConfigModule],
     controllers: [],
     providers: [CryptoService],
     exports: [CryptoService],

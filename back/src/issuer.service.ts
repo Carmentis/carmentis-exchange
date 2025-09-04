@@ -11,9 +11,9 @@ import {
   TokenUnit
 } from '@cmts-dev/carmentis-sdk/server';
 
-import { EnvService } from './env/env.service';
-
 import { CryptoService } from './crypto/crypto.service';
+import { ControlConfigService } from './config/services/ControlConfigService';
+import { AxiosError } from 'axios';
 
 /**
  * Maximum allowed token transfer amount to prevent accidental large transfers
@@ -28,23 +28,38 @@ const MAXIMAL_ALLOWED_TOKEN_TRANSFER = 1000000;
 export class IssuerService implements OnModuleInit {
   private readonly logger = new Logger(IssuerService.name);
   private issuerAccountHash: Hash;
+  private nodeUrl: string;
+  private issuerPublicKey: PublicSignatureKey;
 
-
-  constructor(private readonly envService: EnvService, private readonly cryptoService: CryptoService) {}
+  constructor(
+      private readonly controlConfigService: ControlConfigService,
+      private readonly cryptoService: CryptoService
+  ) {
+  }
 
   /**
    * Initializes the issuer service by loading or creating key pairs
    * and setting up the issuer account on the blockchain.
    */
   async onModuleInit(): Promise<void> {
-    this.logger.log("Initializing issuer service");
+      this.nodeUrl = this.controlConfigService.getNodeUrl();
+      const issuerPrivateKey = this.cryptoService.getIssuerPrivateKey();
+      this.issuerPublicKey = issuerPrivateKey.getPublicKey();
+
+      // ensure that account is defined on the blockchain (otherwise abort)
+      const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+    this.logger.log(`Checking if issuer account (${encoder.encodePublicKey(this.issuerPublicKey)}) exists on chain (${this.nodeUrl})`);
+    await this.abortIfIssuerAccountIsUndefined();
+  }
+
+  private async abortIfIssuerAccountIsUndefined() {
       // Initialize blockchain connection
       const issuerPrivateKey = this.cryptoService.getIssuerPrivateKey();
       const blockchain = this.createBlockchainConnection(issuerPrivateKey);
       const issuerAccountPublicKey = issuerPrivateKey.getPublicKey();
 
       // Initialize issuer account
-      const isIssuerExists = await this.checkAccountExistence(blockchain, issuerAccountPublicKey);
+      const isIssuerExists = await this.isAccountPublishedOnChain(blockchain, issuerAccountPublicKey);
       if (!isIssuerExists) {
           throw new Error("Issuer not found on chain");
       }
@@ -60,7 +75,7 @@ export class IssuerService implements OnModuleInit {
   private createBlockchainConnection(privateKey: PrivateSignatureKey): Blockchain {
     const provider = ProviderFactory.createKeyedProviderExternalProvider(
       privateKey,
-      this.envService.nodeUrl
+      this.nodeUrl
     );
     return Blockchain.createFromProvider(provider);
   }
@@ -70,16 +85,20 @@ export class IssuerService implements OnModuleInit {
    * @param blockchain The blockchain instance
    * @param publicKey The public key of the issuer
    */
-  private async checkAccountExistence(blockchain: Blockchain, publicKey: PublicSignatureKey): Promise<boolean> {
+  private async isAccountPublishedOnChain(blockchain: Blockchain, publicKey: PublicSignatureKey): Promise<boolean> {
     const explorer = blockchain.getExplorer();
 
     // Check if the issuer account already exists
-    this.logger.log(`Checking existence of issuer account based on the public key ${publicKey.getPublicKeyAsString()}`);
+      const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+    this.logger.log(`Checking existence of issuer account based on the public key ${encoder.encodePublicKey(publicKey)}`);
     try {
       this.issuerAccountHash = await explorer.getAccountByPublicKey(publicKey);
       this.logger.log(`Issuer account located at hash ${this.issuerAccountHash.encode()}`);
       return true;
     } catch (error) {
+        if (error instanceof AxiosError) {
+            throw error;
+        }
       this.logger.warn(`Issuer account not found: ${error}`);
       //await this.createIssuerAccount(blockchain);
         return false;

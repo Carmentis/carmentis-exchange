@@ -6,6 +6,7 @@ import { PaymentEntity } from "./entities/payment.entity";
 import {IssuerService} from "../issuer.service";
 import {AppModule} from "../app.module";
 import {ConfigModule} from "@nestjs/config";
+import { ControlConfigModule } from '../config/control-config.module';
 
 export const CARD_PAYMENT_SERVICE = Symbol('CARD_PAYMENT_SERVICE');
 
@@ -13,6 +14,7 @@ export const CARD_PAYMENT_SERVICE = Symbol('CARD_PAYMENT_SERVICE');
     imports: [
         TypeOrmModule.forFeature([PaymentEntity]),
         ConfigModule.forRoot(),
+        ControlConfigModule
     ],
     controllers: [PaymentController],
     providers: [

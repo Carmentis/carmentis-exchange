@@ -1,18 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EnvService } from 'src/env/env.service';
+
 import {
     BlockchainFacade,
     CometBFTPublicKey,
     ValidatorNodeNetworkIntegrationPublicationExecutionContext,
 } from '@cmts-dev/carmentis-sdk/server';
 import { CryptoService } from '../crypto/crypto.service';
+import { ControlConfigService } from '../config/services/ControlConfigService';
 
 @Injectable()
 export class NodeService {
     private readonly logger = new Logger(NodeService.name);
 
     constructor(
-        private envService: EnvService,
+        private readonly controlConfigService: ControlConfigService,
         private readonly cryptoService: CryptoService,
     ) {}
 
@@ -34,8 +35,9 @@ export class NodeService {
     ) {
         // create the blockchain client
         const issuerPrivateKey = this.cryptoService.getIssuerPrivateKey();
+        const nodeUrl = this.controlConfigService.getNodeUrl();
         const blockchain = BlockchainFacade.createFromNodeUrlAndPrivateKey(
-            this.envService.nodeUrl,
+            nodeUrl,
             issuerPrivateKey,
         );
         const validatorNodeId =

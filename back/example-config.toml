@@ -1,0 +1,25 @@
+# This section is used to specify general configuration for the config.
+[control]
+port=3003 # optional (default 3000)
+storage='./control' # Optional (default '.control')
+node_url='https://node.dev.carmentis.io' # Required.
+
+# This section is used to indicate the method to retrieve the private key of the
+# issuer (either by indicating the private key in the config, by indicating the path to the file,
+# or either by the name of the var env where the private key is provided).
+[control.private_key]
+sk = 'SIG:SECP256K1:SK{...}' # used mostly for development
+# path = '/path/to/json/file' # used when private key is stored locally
+# env = 'ISSUER_PRIVATE_KEY_ENV_VAR_NAME' # used when private key is provided as an env variable
+
+
+[control.auth]
+jwt_secret="your-jwt-secret-key-here"
+allowed_public_keys=[
+    'SIG:SECP256K1:PK{...}',
+    'SIG:SECP256K1:PK{...}'
+]
+
+# This section specifies the api key used by the purchase feature.
+[control.purchase.stancer]
+api_key="stest_M3gR0VoS3sOv3KMAOIK976LQ:" # Required.

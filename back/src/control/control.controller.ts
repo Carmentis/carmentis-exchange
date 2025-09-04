@@ -22,10 +22,9 @@ import {
 import { NodeStatusResponseDto } from './dto/node-status.dto';
 import { Request } from 'express';
 import { Public } from './decorators/public.decorator';
-import { EnvService } from '../env/env.service';
-import { BlockchainFacade } from '@cmts-dev/carmentis-sdk/server';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { SetNodeAsValidatorRequestDto } from './dto/setNodeAsValidator/SetNodeAsValidatorRequestDto';
+import { ControlConfigService } from '../config/services/ControlConfigService';
 
 
 @UseGuards(JwtAuthGuard)
@@ -36,7 +35,7 @@ export class ControlController {
   constructor(
     private readonly authService: AuthService,
     private readonly nodeService: NodeService,
-    private readonly envService: EnvService,
+    private readonly controlConfig: ControlConfigService,
   ) {}
 
   /**
@@ -105,35 +104,6 @@ export class ControlController {
    */
   @Get('connectedNode')
   async getConnectedNode(): Promise<{ nodeEndpoint: string }> {
-    this.logger.log('Getting connected node information');
-    return { nodeEndpoint: this.envService.nodeUrl };
-    /*
-    try {
-      // Get the node URL from the environment service
-      const nodeUrl = this.envService.nodeUrl;
-
-      if (!nodeUrl) {
-        throw new Error('Node URL is not defined');
-      }
-
-      // Create a provider and blockchain instance
-      const blockchain = BlockchainFacade.createFromNodeUrl(nodeUrl);
-
-      // Get the node status
-      const nodeStatus = await blockchain.getNodeStatus();
-
-      // Return the node information
-      return {
-        address: nodeStatus.getRpcAddress() || 'Unknown RPC address',
-        url: nodeUrl,
-        status: nodeStatus,
-        chainId: nodeStatus.getChainId() || 'Unknown chain',
-      };
-    } catch (error) {
-      this.logger.error(`Error getting connected node information: ${error}`);
-      throw error;
-    }
-
-     */
+    return { nodeEndpoint: this.controlConfig.getNodeUrl() };
   }
 }

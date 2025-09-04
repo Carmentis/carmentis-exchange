@@ -1,5 +1,10 @@
 import { CardPaymentService } from "../card-payment.interface";
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+    Injectable,
+    Logger,
+    NotFoundException,
+    OnModuleInit,
+} from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { PaymentRequestDto } from "../dto/payment-request.dto";
@@ -9,6 +14,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import {ConfigService} from "@nestjs/config";
 import {CarmentisError, CMTSToken, CurrencyConverterFactory} from "@cmts-dev/carmentis-sdk/server";
+import { ControlConfigService } from '../../config/services/ControlConfigService';
 
 @Injectable()
 export class StancerCardPaymentService implements CardPaymentService {
@@ -20,7 +26,12 @@ export class StancerCardPaymentService implements CardPaymentService {
         @InjectRepository(PaymentEntity)
         private readonly paymentRepository: Repository<PaymentEntity>,
         private readonly configService: ConfigService,
-    ) {}
+        private readonly controlConfig: ControlConfigService,
+    ) {
+
+        this.apiKey = this.controlConfig.getStancerApiKey();
+    }
+
 
     /**
      * Process a payment using Stancer API
