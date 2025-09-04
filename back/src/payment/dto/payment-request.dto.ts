@@ -1,43 +1,49 @@
-import { IsNotEmpty, IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
+import {
+    IsNotEmpty,
+    IsNumber,
+    IsObject,
+    IsString,
+    ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CardDto {
-  @IsString()
-  @IsNotEmpty()
-  number: string;
+    @IsString()
+    @IsNotEmpty()
+    number: string;
 
-  @IsNumber()
-  @IsNotEmpty()
-  exp_month: number;
+    @IsNumber()
+    @IsNotEmpty()
+    exp_month: number;
 
-  @IsNumber()
-  @IsNotEmpty()
-  exp_year: number;
+    @IsNumber()
+    @IsNotEmpty()
+    exp_year: number;
 
-  @IsString()
-  @IsNotEmpty()
-  cvc: string;
+    @IsString()
+    @IsNotEmpty()
+    cvc: string;
 
-  @IsString()
-  @IsNotEmpty()
-  name: string;
+    @IsString()
+    @IsNotEmpty()
+    name: string;
 }
 
 export class PaymentRequestDto {
-  @IsObject()
-  @ValidateNested()
-  @Type(() => CardDto)
-  card: CardDto;
+    @IsObject()
+    @ValidateNested()
+    @Type(() => CardDto)
+    card: CardDto;
 
-  @IsNumber()
-  @IsNotEmpty()
-  amount: number;
+    @IsNumber()
+    @IsNotEmpty()
+    amount: number;
 
-  @IsNumber()
-  @IsNotEmpty()
-  tokens: number;
+    @IsNumber()
+    @IsNotEmpty()
+    tokens: number;
 
-  @IsString()
-  @IsNotEmpty()
-  walletPublicKey: string;
+    @IsString()
+    @IsNotEmpty()
+    walletPublicKey: string;
 }

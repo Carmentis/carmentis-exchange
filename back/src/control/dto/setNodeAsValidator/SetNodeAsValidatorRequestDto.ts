@@ -1,14 +1,14 @@
 import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
 export class SetNodeAsValidatorRequestDto {
-  @IsBoolean()
-  asValidator: boolean;
+    @IsBoolean()
+    asValidator: boolean;
 
-  @IsString()
-  @IsNotEmpty()
-  nodePublicKey: string;
+    @IsString()
+    @IsNotEmpty()
+    nodePublicKey: string;
 
-  @IsString()
-  @IsNotEmpty()
-  nodePublicKeyType: string;
+    @IsString()
+    @IsNotEmpty()
+    nodePublicKeyType: string;
 }

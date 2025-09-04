@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
 import { ControlController } from './control.controller';
 import { AuthService } from './auth.service';
 import { NodeService } from './node.service';
@@ -19,19 +18,13 @@ import { ControlConfigService } from '../config/services/ControlConfigService';
         CryptoModule,
         TypeOrmModule.forFeature([AuthChallengeEntity, NodeEntity]),
         ConfigModule.forRoot(),
-        /*
-        JwtModule.register({
-            secret: process.env.JWT_SECRET || 'default-secret',
-            signOptions: { expiresIn: '1d' },
-        }),
-         */
         JwtModule.registerAsync({
             imports: [ControlConfigModule],
             inject: [ControlConfigService],
             useFactory: (configService: ControlConfigService) => ({
-                secret: configService.getJwtSecret()
-            })
-        })
+                secret: configService.getJwtSecret(),
+            }),
+        }),
     ],
     controllers: [ControlController],
     providers: [AuthService, NodeService, AuthorizedKeysService],

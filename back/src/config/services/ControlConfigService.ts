@@ -1,12 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigSchema, ConfigType } from '../types/config.type';
 import process from 'node:process';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as toml from '@iarna/toml';
-import * as url from 'node:url';
-import { PublicSignatureKey, StringSignatureEncoder } from '@cmts-dev/carmentis-sdk/server';
 
 @Injectable()
 export class ControlConfigService {
@@ -14,7 +11,7 @@ export class ControlConfigService {
     private logger = new Logger(ControlConfigService.name);
 
     constructor() {
-        this.loadConfigFile()
+        this.loadConfigFile();
     }
 
     private loadConfigFile() {
@@ -34,39 +31,52 @@ export class ControlConfigService {
         const candidatesConfigFilePaths = [];
 
         // At the top priority, we check if the user has specified a config file path using an environment variable.
-        const specifiedConfigPath = process.env['CONTROL_CONFIG']  || process.env['CONFIG'] || process.env['CONFIG_PATH'] || undefined;
+        const specifiedConfigPath =
+            process.env['CONTROL_CONFIG'] ||
+            process.env['CONFIG'] ||
+            process.env['CONFIG_PATH'] ||
+            undefined;
         if (specifiedConfigPath !== undefined) {
             candidatesConfigFilePaths.push(specifiedConfigPath);
         }
 
-
         // we exclude undefined filenames and appends the current working directory to each filename.
         const currentWorkDirectory = process.cwd();
-        const filteredCurrentDirectoryCandidatesPaths = candidatesConfigFilenames
-            .filter((filename) => filename !== undefined)
-            .map((filename) => join(currentWorkDirectory, filename));
-        candidatesConfigFilePaths.push(...filteredCurrentDirectoryCandidatesPaths);
-
+        const filteredCurrentDirectoryCandidatesPaths =
+            candidatesConfigFilenames
+                .filter((filename) => filename !== undefined)
+                .map((filename) => join(currentWorkDirectory, filename));
+        candidatesConfigFilePaths.push(
+            ...filteredCurrentDirectoryCandidatesPaths,
+        );
 
         // we now search for the first config file that exists.
         for (const configPath of candidatesConfigFilePaths) {
             try {
                 this.logger.log(`Loading config file from ${configPath}`);
                 const config = readFileSync(configPath, 'utf8');
-                const parsedConfig = toml.parse(config) as Record<string, any>;
+                const parsedConfig = toml.parse(config) as Record<
+                    string,
+                    unknown
+                >;
                 this.controlConfig = ConfigSchema.parse(parsedConfig);
                 return;
             } catch (e) {
                 if (e instanceof Error) {
-                    this.logger.warn(`Failed to load config file from ${configPath}: ${e.message}`);
+                    this.logger.warn(
+                        `Failed to load config file from ${configPath}: ${e.message}`,
+                    );
                 }
             }
         }
 
         // if we reach this point, we have not found a valid config file.
         // we throw an error.
-        const formattedSearchedCandidates = candidatesConfigFilePaths.join(', ');
-        throw new Error(`Failed to load config file from any of the following paths: ${formattedSearchedCandidates}`);
+        const formattedSearchedCandidates =
+            candidatesConfigFilePaths.join(', ');
+        throw new Error(
+            `Failed to load config file from any of the following paths: ${formattedSearchedCandidates}`,
+        );
     }
 
     getStancerApiKey() {
@@ -89,11 +99,11 @@ export class ControlConfigService {
         return this.controlConfig.control.node_url;
     }
 
-    getEncodedAuthorizedPublicKeys() : string[] {
-        const encodedAuthorizedPublicKeys = this.controlConfig.control.auth.allowed_public_keys;
+    getEncodedAuthorizedPublicKeys(): string[] {
+        const encodedAuthorizedPublicKeys =
+            this.controlConfig.control.auth.allowed_public_keys;
         return encodedAuthorizedPublicKeys;
     }
-
 
     getJwtSecret() {
         return this.controlConfig.control.auth.jwt_secret;

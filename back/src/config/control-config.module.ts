@@ -5,6 +5,4 @@ import { ControlConfigService } from './services/ControlConfigService';
     providers: [ControlConfigService],
     exports: [ControlConfigService],
 })
-export class ControlConfigModule {
-
-}
+export class ControlConfigModule {}

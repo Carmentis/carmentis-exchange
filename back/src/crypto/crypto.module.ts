@@ -8,6 +8,4 @@ import { ControlConfigModule } from '../config/control-config.module';
     providers: [CryptoService],
     exports: [CryptoService],
 })
-export class CryptoModule {
-
-}
+export class CryptoModule {}

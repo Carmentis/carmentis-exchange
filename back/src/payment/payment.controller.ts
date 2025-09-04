@@ -1,12 +1,19 @@
-import { Body, Controller, Inject, Post, HttpCode, HttpStatus, Logger, Param, Res } from "@nestjs/common";
-import { CARD_PAYMENT_SERVICE } from "./payment.module";
-import { PaymentRequestDto } from "./dto/payment-request.dto";
-import { PaymentResponseDto } from "./dto/payment-response.dto";
-import { CardPaymentService } from "./card-payment.interface";
+import {
+    Body,
+    Controller,
+    Inject,
+    Post,
+    HttpCode,
+    HttpStatus,
+    Logger,
+    Param,
+    Res,
+} from '@nestjs/common';
+import { PaymentRequestDto } from './dto/payment-request.dto';
+import { PaymentResponseDto } from './dto/payment-response.dto';
 import { Response } from 'express';
-import {StancerCardPaymentService} from "./stancer/stancer-card-payment.service";
-import {IssuerService} from "../issuer.service";
-import {EventEmitter2} from "@nestjs/event-emitter";
+import { StancerCardPaymentService } from './stancer/stancer-card-payment.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Controller('/payment')
 export class PaymentController {
@@ -15,7 +22,7 @@ export class PaymentController {
     constructor(
         @Inject()
         private readonly paymentService: StancerCardPaymentService,
-        private eventEmitter: EventEmitter2
+        private eventEmitter: EventEmitter2,
     ) {}
 
     /**
@@ -25,12 +32,19 @@ export class PaymentController {
      */
     @Post()
     @HttpCode(HttpStatus.OK)
-    async processPayment(@Body() paymentRequest: PaymentRequestDto): Promise<PaymentResponseDto> {
-        this.logger.log(`Processing payment for ${paymentRequest.tokens} tokens`);
+    async processPayment(
+        @Body() paymentRequest: PaymentRequestDto,
+    ): Promise<PaymentResponseDto> {
+        this.logger.log(
+            `Processing payment for ${paymentRequest.tokens} tokens`,
+        );
 
         try {
-            const response = await this.paymentService.processPayment(paymentRequest);
-            this.logger.log('Payment processing successful, returning redirect URL');
+            const response =
+                await this.paymentService.processPayment(paymentRequest);
+            this.logger.log(
+                'Payment processing successful, returning redirect URL',
+            );
             return response;
         } catch (error) {
             this.logger.error(`Payment processing failed: ${error}`);
@@ -45,12 +59,16 @@ export class PaymentController {
      */
     @Post('result/:id')
     @HttpCode(HttpStatus.OK)
-    async checkPaymentStatus(@Param('id') id: string): Promise<{ status: string }> {
+    async checkPaymentStatus(
+        @Param('id') id: string,
+    ): Promise<{ status: string }> {
         this.logger.log(`Checking payment status for payment ID: ${id}`);
 
         try {
             const result = await this.paymentService.checkPaymentStatus(id);
-            this.logger.log(`Payment status check successful, status: ${result.status}`);
+            this.logger.log(
+                `Payment status check successful, status: ${result.status}`,
+            );
             return result;
         } catch (error) {
             this.logger.error(`Payment status check failed: ${error}`);
@@ -65,7 +83,10 @@ export class PaymentController {
      */
     @Post('update/:id')
     @HttpCode(HttpStatus.OK)
-    async handlePaymentUpdate(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    async handlePaymentUpdate(
+        @Param('id') id: string,
+        @Res() res: Response,
+    ): Promise<void> {
         this.logger.log(`Handling payment update for payment ID: ${id}`);
         // Check payment status
         const result = await this.paymentService.checkPaymentStatus(id);
@@ -74,10 +95,9 @@ export class PaymentController {
 
         // if the payment is completed, then we proceed to the transfer of the token
         if (result.completed) {
-            this.logger.debug(`Emitting notification of payment with id ${id}`)
+            this.logger.debug(`Emitting notification of payment with id ${id}`);
             this.eventEmitter.emit('paiement.succeeded', { id });
         }
-
 
         // Return HTML page with redirect to success page on the frontend
         res.send(`

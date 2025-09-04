@@ -1,63 +1,70 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+    IsBoolean,
+    IsEnum,
+    IsNotEmpty,
+    IsOptional,
+    IsString,
+    IsUUID,
+} from 'class-validator';
 
 export class NodeDto {
-  @IsUUID()
-  id: string;
+    @IsUUID()
+    id: string;
 
-  @IsNotEmpty()
-  @IsString()
-  name: string;
+    @IsNotEmpty()
+    @IsString()
+    name: string;
 
-  @IsNotEmpty()
-  @IsString()
-  publicKey: string;
+    @IsNotEmpty()
+    @IsString()
+    publicKey: string;
 
-  @IsNotEmpty()
-  @IsString()
-  endpoint: string;
+    @IsNotEmpty()
+    @IsString()
+    endpoint: string;
 
-  @IsBoolean()
-  isValidator: boolean;
+    @IsBoolean()
+    isValidator: boolean;
 
-  @IsEnum(['pending', 'active', 'inactive'])
-  status: 'pending' | 'active' | 'inactive';
+    @IsEnum(['pending', 'active', 'inactive'])
+    status: 'pending' | 'active' | 'inactive';
 
-  createdAt: Date;
-  updatedAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export class CreateNodeDto {
-  @IsNotEmpty()
-  @IsString()
-  name: string;
+    @IsNotEmpty()
+    @IsString()
+    name: string;
 
-  @IsNotEmpty()
-  @IsString()
-  publicKey: string;
+    @IsNotEmpty()
+    @IsString()
+    publicKey: string;
 
-  @IsNotEmpty()
-  @IsString()
-  endpoint: string;
+    @IsNotEmpty()
+    @IsString()
+    endpoint: string;
 
-  @IsOptional()
-  @IsBoolean()
-  isValidator?: boolean;
+    @IsOptional()
+    @IsBoolean()
+    isValidator?: boolean;
 }
 
 export class UpdateNodeDto {
-  @IsOptional()
-  @IsString()
-  name?: string;
+    @IsOptional()
+    @IsString()
+    name?: string;
 
-  @IsOptional()
-  @IsString()
-  endpoint?: string;
+    @IsOptional()
+    @IsString()
+    endpoint?: string;
 
-  @IsOptional()
-  @IsBoolean()
-  isValidator?: boolean;
+    @IsOptional()
+    @IsBoolean()
+    isValidator?: boolean;
 
-  @IsOptional()
-  @IsEnum(['pending', 'active', 'inactive'])
-  status?: 'pending' | 'active' | 'inactive';
+    @IsOptional()
+    @IsEnum(['pending', 'active', 'inactive'])
+    status?: 'pending' | 'active' | 'inactive';
 }

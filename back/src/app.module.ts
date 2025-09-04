@@ -29,7 +29,10 @@ export const DB_STORAGE = 'db.sqlite';
             inject: [ControlConfigService],
             useFactory: async (controlConfig: ControlConfigService) => ({
                 type: 'sqlite',
-                database: join(controlConfig.getSpecifiedStoragePath(), DB_STORAGE),
+                database: join(
+                    controlConfig.getSpecifiedStoragePath(),
+                    DB_STORAGE,
+                ),
                 entities: [__dirname + '/**/*.entity.{ts,js}'],
                 synchronize: true,
             }),

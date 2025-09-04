@@ -1,19 +1,18 @@
-import { CardPaymentService } from "../card-payment.interface";
-import {
-    Injectable,
-    Logger,
-    NotFoundException,
-    OnModuleInit,
-} from '@nestjs/common';
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { PaymentRequestDto } from "../dto/payment-request.dto";
-import { PaymentResponseDto } from "../dto/payment-response.dto";
-import { PaymentEntity, PaymentStatus } from "../entities/payment.entity";
+import { CardPaymentService } from '../card-payment.interface';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PaymentRequestDto } from '../dto/payment-request.dto';
+import { PaymentResponseDto } from '../dto/payment-response.dto';
+import { PaymentEntity, PaymentStatus } from '../entities/payment.entity';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import {ConfigService} from "@nestjs/config";
-import {CarmentisError, CMTSToken, CurrencyConverterFactory} from "@cmts-dev/carmentis-sdk/server";
+import { ConfigService } from '@nestjs/config';
+import {
+    CarmentisError,
+    CMTSToken,
+    CurrencyConverterFactory,
+} from '@cmts-dev/carmentis-sdk/server';
 import { ControlConfigService } from '../../config/services/ControlConfigService';
 
 @Injectable()
@@ -28,17 +27,17 @@ export class StancerCardPaymentService implements CardPaymentService {
         private readonly configService: ConfigService,
         private readonly controlConfig: ControlConfigService,
     ) {
-
         this.apiKey = this.controlConfig.getStancerApiKey();
     }
-
 
     /**
      * Process a payment using Stancer API
      * @param paymentRequest The payment request data
      * @returns A promise that resolves to the payment response with redirect URL
      */
-    async processPayment(paymentRequest: PaymentRequestDto): Promise<PaymentResponseDto> {
+    async processPayment(
+        paymentRequest: PaymentRequestDto,
+    ): Promise<PaymentResponseDto> {
         // check that API key is set
         if (!this.apiKey) {
             throw new Error('Stancer API key not set');
@@ -46,7 +45,8 @@ export class StancerCardPaymentService implements CardPaymentService {
 
         try {
             // Step 1: Create a payment entity with UUID
-            const converter = CurrencyConverterFactory.defaultEurosToCMTSTokenConverter();
+            const converter =
+                CurrencyConverterFactory.defaultEurosToCMTSTokenConverter();
             const cmtsTokens = CMTSToken.create(paymentRequest.tokens);
             const equivTokensInEuros = converter.invert(cmtsTokens).getAmount();
             const payment = new PaymentEntity();
@@ -57,9 +57,8 @@ export class StancerCardPaymentService implements CardPaymentService {
             payment.status = PaymentStatus.PENDING;
             payment.metadata = {
                 cardLastFour: paymentRequest.card.number.slice(-4),
-                cardholderName: paymentRequest.card.name
+                cardholderName: paymentRequest.card.name,
             };
-
 
             // Step 2: Create a card on Stancer
             const cardResponse = await this.createCard(paymentRequest);
@@ -70,18 +69,21 @@ export class StancerCardPaymentService implements CardPaymentService {
             // Step 3: Create a payment using the card and the UUID for return_url
             // Make sure to use the correct backend URL for the return_url
             // This should be the publicly accessible URL of your backend
-            const backendUrl = this.configService.getOrThrow<string>("EXCHANGE_API")
+            const backendUrl =
+                this.configService.getOrThrow<string>('EXCHANGE_API');
             const returnUrl = `${backendUrl}/payment/update/${payment.id}`;
             const paymentResponse = await this.createPayment(
                 equivTokensInEuros,
                 cardResponse.id,
                 paymentRequest.tokens,
-                returnUrl
+                returnUrl,
             );
 
             // Step 4: Update payment information in the database
             const authRedirectionUrl = paymentResponse.auth.redirect_url;
-            this.logger.debug(`Stancer PayID{${paymentResponse.id}} -> Payment Redirection{${authRedirectionUrl}}`)
+            this.logger.debug(
+                `Stancer PayID{${paymentResponse.id}} -> Payment Redirection{${authRedirectionUrl}}`,
+            );
             payment.paymentId = paymentResponse.id;
             payment.redirectUrl = authRedirectionUrl;
             await this.paymentRepository.save(payment);
@@ -89,11 +91,13 @@ export class StancerCardPaymentService implements CardPaymentService {
             // Step 5: Return the redirect URL and payment ID
             return {
                 redirect_url: paymentResponse.auth.redirect_url,
-                payment_id: payment.id
+                payment_id: payment.id,
             };
         } catch (error) {
             if (CarmentisError.isCarmentisError(error)) {
-                this.logger.error(`Payment processing failed due to Carmentis error: ${error}`);
+                this.logger.error(
+                    `Payment processing failed due to Carmentis error: ${error}`,
+                );
             } else {
                 this.logger.error(`Payment processing failed: ${error}`);
             }
@@ -106,7 +110,7 @@ export class StancerCardPaymentService implements CardPaymentService {
      * @param paymentRequest The payment request containing card details
      * @returns The created card object from Stancer
      */
-    private async createCard(paymentRequest: PaymentRequestDto): Promise<any> {
+    private async createCard(paymentRequest: PaymentRequestDto) {
         try {
             const response = await axios.post(
                 `${this.apiUrl}/cards/`,
@@ -115,14 +119,14 @@ export class StancerCardPaymentService implements CardPaymentService {
                     exp_month: paymentRequest.card.exp_month,
                     exp_year: paymentRequest.card.exp_year,
                     cvc: paymentRequest.card.cvc,
-                    name: paymentRequest.card.name
+                    name: paymentRequest.card.name,
                 },
                 {
                     auth: {
                         username: this.apiKey,
-                        password: ''
-                    }
-                }
+                        password: '',
+                    },
+                },
             );
 
             return response.data;
@@ -144,8 +148,8 @@ export class StancerCardPaymentService implements CardPaymentService {
         amount: number,
         cardId: string,
         tokens: number,
-        returnUrl: string
-    ): Promise<any> {
+        returnUrl: string,
+    ) {
         try {
             const response = await axios.post(
                 `${this.apiUrl}/payments/`,
@@ -155,15 +159,15 @@ export class StancerCardPaymentService implements CardPaymentService {
                     description: `Purchase of ${tokens} tokens`,
                     card: cardId,
                     auth: {
-                        return_url: returnUrl
-                    }
+                        return_url: returnUrl,
+                    },
                 },
                 {
                     auth: {
                         username: this.apiKey,
-                        password: ''
-                    }
-                }
+                        password: '',
+                    },
+                },
             );
 
             return response.data;
@@ -178,21 +182,23 @@ export class StancerCardPaymentService implements CardPaymentService {
      * @param paymentId The payment ID from Stancer
      * @returns The payment status from Stancer
      */
-    private async getPaymentStatusFromStancer(paymentId: string): Promise<any> {
+    private async getPaymentStatusFromStancer(paymentId: string) {
         try {
             const response = await axios.get(
                 `${this.apiUrl}/payments/${paymentId}`,
                 {
                     auth: {
                         username: this.apiKey,
-                        password: ''
-                    }
-                }
+                        password: '',
+                    },
+                },
             );
 
             return response.data;
         } catch (error) {
-            this.logger.error(`Failed to get payment status from Stancer: ${error}`);
+            this.logger.error(
+                `Failed to get payment status from Stancer: ${error}`,
+            );
             throw error;
         }
     }
@@ -202,10 +208,14 @@ export class StancerCardPaymentService implements CardPaymentService {
      * @param id The local payment ID
      * @returns The payment status
      */
-    async checkPaymentStatus(id: string): Promise<{ status: string, completed: boolean, pending: boolean }> {
+    async checkPaymentStatus(
+        id: string,
+    ): Promise<{ status: string; completed: boolean; pending: boolean }> {
         try {
             // Find the payment in the database
-            const payment = await this.paymentRepository.findOne({ where: { id } });
+            const payment = await this.paymentRepository.findOne({
+                where: { id },
+            });
 
             if (!payment) {
                 throw new NotFoundException(`Payment with ID ${id} not found`);
@@ -213,11 +223,17 @@ export class StancerCardPaymentService implements CardPaymentService {
 
             // If the payment is already completed or failed, return the status
             if (payment.status !== PaymentStatus.PENDING) {
-                return { status: payment.status, completed: payment.status === 'completed', pending: payment.status === 'pending' };
+                return {
+                    status: payment.status,
+                    completed: payment.status === 'completed',
+                    pending: payment.status === 'pending',
+                };
             }
 
             // Otherwise, check the status from Stancer
-            const stancerPayment = await this.getPaymentStatusFromStancer(payment.paymentId);
+            const stancerPayment = await this.getPaymentStatusFromStancer(
+                payment.paymentId,
+            );
 
             // Update the payment status based on the Stancer response
             if (stancerPayment.auth && stancerPayment.auth.status) {
@@ -231,7 +247,11 @@ export class StancerCardPaymentService implements CardPaymentService {
                 await this.paymentRepository.save(payment);
             }
 
-            return { status: payment.status, completed: payment.status === 'completed', pending: payment.status === 'pending' };
+            return {
+                status: payment.status,
+                completed: payment.status === 'completed',
+                pending: payment.status === 'pending',
+            };
         } catch (error) {
             this.logger.error(`Failed to check payment status: ${error}`);
             throw error;
