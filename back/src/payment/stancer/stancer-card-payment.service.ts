@@ -69,8 +69,7 @@ export class StancerCardPaymentService implements CardPaymentService {
             // Step 3: Create a payment using the card and the UUID for return_url
             // Make sure to use the correct backend URL for the return_url
             // This should be the publicly accessible URL of your backend
-            const backendUrl =
-                this.configService.getOrThrow<string>('EXCHANGE_API');
+            const backendUrl = this.controlConfig.getControlApiEndpoint();
             const returnUrl = `${backendUrl}/payment/update/${payment.id}`;
             const paymentResponse = await this.createPayment(
                 equivTokensInEuros,

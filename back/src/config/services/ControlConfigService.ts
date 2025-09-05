@@ -108,4 +108,8 @@ export class ControlConfigService {
     getJwtSecret() {
         return this.controlConfig.control.auth.jwt_secret;
     }
+
+    getControlApiEndpoint(): string {
+        return this.controlConfig.control.api_endpoint;
+    }
 }

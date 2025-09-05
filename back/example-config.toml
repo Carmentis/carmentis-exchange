@@ -1,5 +1,6 @@
 # This section is used to specify general configuration for the config.
 [control]
+api_endpoint='https://api:300' # Endpoint where the Control API can be reached by other servers.
 port=3003 # optional (default 3000)
 storage='./control' # Optional (default '.control')
 node_url='https://node.dev.carmentis.io' # Required.

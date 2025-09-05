@@ -56,9 +56,8 @@ export function ConnectionContextProvider({children}: PropsWithChildren) {
 /**
  * Retrieves the node URL from the ConnectionContext. This hook must be used within
  * a ConnectionContextProvider. If used outside of the provider, an error will be thrown.
- *
- * @return {string | undefined} The node URL from the connection context, or undefined if not available.
  */
-export function useConnectionNodeUrl(): string | undefined {
-	return process.env.NEXT_PUBLIC_EXCHANGE_API
+export function useConnectionNodeUrl() {
+    const { nodeUrl, loading, error } = useExchangeConfig();
+    return {nodeUrl, loading}
 }
