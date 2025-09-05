@@ -139,12 +139,12 @@ export class IssuerService implements OnModuleInit {
         }
 
         // Validate token amount
-        if (
-            MAXIMAL_ALLOWED_TOKEN_TRANSFER >= 0 &&
-            MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount.getAmount()
-        ) {
+        const transferredAmount = tokenAmount.getAmountAsAtomic();
+        const isNegativeOrZero = transferredAmount <= 0;
+        const isAboveAllowedMax = MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount.getAmount();
+        if ( isNegativeOrZero || isAboveAllowedMax ) {
             throw new BadRequestException(
-                `Maximal amount of token transfer reached: Currently limited to ${MAXIMAL_ALLOWED_TOKEN_TRANSFER}`,
+                `Invalid amount of token transfer: Should be between zero (excluded) and ${MAXIMAL_ALLOWED_TOKEN_TRANSFER}`,
             );
         }
 
