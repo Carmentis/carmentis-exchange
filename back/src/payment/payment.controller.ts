@@ -14,6 +14,7 @@ import { PaymentResponseDto } from './dto/payment-response.dto';
 import { Response } from 'express';
 import { StancerCardPaymentService } from './stancer/stancer-card-payment.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('/payment')
 export class PaymentController {
@@ -31,6 +32,7 @@ export class PaymentController {
      * @returns The payment response with redirect URL
      */
     @Post()
+    @Throttle({ default: { limit: 10, ttl: 30000 } })
     @HttpCode(HttpStatus.OK)
     async processPayment(
         @Body() paymentRequest: PaymentRequestDto,

@@ -1,5 +1,10 @@
 import { CardPaymentService } from '../card-payment.interface';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    Logger,
+    NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentRequestDto } from '../dto/payment-request.dto';
@@ -47,7 +52,14 @@ export class StancerCardPaymentService implements CardPaymentService {
             // Step 1: Create a payment entity with UUID
             const converter =
                 CurrencyConverterFactory.defaultEurosToCMTSTokenConverter();
-            const cmtsTokens = CMTSToken.create(paymentRequest.tokens);
+
+            // we reject transfer for more than 100 tokens
+            const cmtsTokens = CMTSToken.createCMTS(paymentRequest.tokens);
+            const transferLimit = CMTSToken.createCMTS(100);
+            if (cmtsTokens.isGreaterThan(transferLimit)) {
+                throw new BadRequestException(`Cannot purchase more than ${transferLimit.toString()}`);
+            }
+
             const equivTokensInEuros = converter.invert(cmtsTokens).getAmount();
             const payment = new PaymentEntity();
             payment.id = uuidv4();

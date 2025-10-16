@@ -12,6 +12,7 @@ import { CryptoModule } from './crypto/crypto.module';
 import { ControlConfigModule } from './config/control-config.module';
 import { ControlConfigService } from './config/services/ControlConfigService';
 import { join } from 'path';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 export const DB_STORAGE = 'db.sqlite';
 
@@ -24,6 +25,14 @@ export const DB_STORAGE = 'db.sqlite';
         ControlModule,
         CryptoModule,
         ConfigModule.forRoot(),
+        ThrottlerModule.forRoot({
+            throttlers: [
+                {
+                    ttl: 60000,
+                    limit: 50,
+                }
+            ]
+        }),
         TypeOrmModule.forRootAsync({
             imports: [ControlConfigModule],
             inject: [ControlConfigService],
