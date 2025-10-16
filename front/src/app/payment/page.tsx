@@ -142,11 +142,8 @@ function PaymentCard() {
             <Box className="glass-light p-6 border-b border-white/30">
                 <div className="flex items-center space-x-3 mb-2">
                     <Image src="/carmentis.svg" alt="Carmentis Logo" width={32} height={32}/>
-                    <Typography variant="h5" className="font-semibold text-black/80">Token Exchange</Typography>
+                    <Typography variant="h5" className="font-semibold text-black/80">Get Carmentis Testnet tokens for free</Typography>
                 </div>
-                <Typography variant="body2" className="text-black/70">
-                    Get Carmentis Testnet tokens for free
-                </Typography>
             </Box>
 
             <Box className="px-6 pt-4">
@@ -280,7 +277,7 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
             />
 
             <TextField
-                label="Token Amount"
+                label="Token Amount (100 CMTS max)"
                 type="number"
                 {...register("tokenAmount")}
                 error={!!errors.tokenAmount}
