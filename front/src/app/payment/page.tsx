@@ -72,7 +72,7 @@ function Navbar() {
                 <div className="flex items-center space-x-2">
                     <Image src="/carmentis.svg" alt="Carmentis Logo" width={32} height={32}/>
                     <Typography variant="h6" className="font-semibold">
-                        Carmentis <span className="text-black/70">Exchange</span>
+                        Carmentis <span className="text-black/70">Faucets</span>
                     </Typography>
                 </div>
 
@@ -99,7 +99,7 @@ function Footer() {
             <Container maxWidth="lg">
                 <div className="flex justify-between items-center">
                     <Typography variant="body2" className="text-black/60">
-                        © {new Date().getFullYear()} Carmentis Exchange
+                        © {new Date().getFullYear()} Carmentis Faucets
                     </Typography>
                     <Typography variant="body2" className="text-black/60">
                         Powered by Carmentis
@@ -145,7 +145,7 @@ function PaymentCard() {
                     <Typography variant="h5" className="font-semibold text-black/80">Token Exchange</Typography>
                 </div>
                 <Typography variant="body2" className="text-black/70">
-                    Quickly and securely purchase Carmentis tokens for your account.
+                    Get Carmentis Testnet tokens for free
                 </Typography>
             </Box>
 
