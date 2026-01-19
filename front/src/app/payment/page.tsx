@@ -40,6 +40,7 @@ import {CMTSToken, CurrencyConverterFactory} from "@cmts-dev/carmentis-sdk/clien
 import {useCryptoPayment} from "@/hooks/useCryptoPayment";
 import {useCardPayment} from "@/hooks/useCardPayment";
 import {useSEPAPayment} from "@/hooks/useSEPAPayment";
+import {Captcha} from "recaptz";
 
 export default function Home() {
     return (
@@ -571,9 +572,16 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [captchaValidated, setCaptchaValidated] = useState(false);
     const converter = CurrencyConverterFactory.defaultEurosToCMTSTokenConverter();
 
     const handleSubmit = async () => {
+        if (!captchaValidated) {
+            setError("Please complete the captcha verification");
+            toast.error("Please complete the captcha verification");
+            return;
+        }
+
         setIsSubmitting(true);
         setError(null);
 
@@ -736,6 +744,18 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                         </div>
                     </Box>
 
+                    <Box className="flex justify-center mt-4">
+                        <Captcha
+                            type="mixed"
+                            length={6}
+                            onValidate={(isValid) => {
+                                console.log('Captcha validated:', isValid);
+                                setCaptchaValidated(isValid);
+                            }}
+                            showSuccessAnimation
+                        />
+                    </Box>
+
                     <Box className="flex justify-between mt-6">
                         <Button
                             type="button"
@@ -743,7 +763,7 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                             size="large"
                             onClick={onBack}
                             disabled={isSubmitting}
-                            
+
                         >
                             Back
                         </Button>
@@ -751,8 +771,7 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                             onClick={handleSubmit}
                             variant="contained"
                             size="large"
-                            disabled={isSubmitting}
-                            
+                            disabled={isSubmitting || !captchaValidated}
                         >
                             {isSubmitting ? (
                                 <div className="flex items-center">
