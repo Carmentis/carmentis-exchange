@@ -1,37 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import {PropsWithChildren, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import * as yup from "yup";
 import {yupResolver} from '@hookform/resolvers/yup';
-
-import {
-    AppBar,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Container,
-    Link,
-    TextField,
-    Toolbar,
-    Typography,
-    Box,
-    Paper,
-    IconButton,
-    Tooltip,
-    Stepper,
-    Step,
-    StepLabel,
-    Divider,
-    Alert,
-    CircularProgress,
-    RadioGroup,
-    FormControlLabel,
-    Radio,
-    FormControl,
-    FormLabel
-} from '@mui/material';
 import {useForm, Controller} from 'react-hook-form';
 
 import {useConnectionNodeUrl} from '@/app/payment/connection.context';
@@ -56,7 +28,7 @@ function PaymentCard() {
     const [formData, setFormData] = useState({
         publicKey: '',
         tokenAmount: 100,
-        paymentMethod: 'card' // Default payment method
+        paymentMethod: 'card'
     });
 
     const handleNext = (data: any) => {
@@ -78,33 +50,47 @@ function PaymentCard() {
     };
 
     return (
-        <Card className="w-full max-w-2xl shadow-sm">
+        <div className="w-full max-w-2xl bg-white rounded-lg shadow-sm">
             {/* Header */}
-            <Box className="p-6 pb-4">
+            <div className="p-6 pb-4">
                 <div className="flex items-center gap-3 mb-2">
                     <Image src="/carmentis.svg" alt="Carmentis Logo" width={24} height={24}/>
-                    <Typography variant="h6" className="font-semibold">
+                    <h1 className="text-xl font-semibold">
                         Carmentis Testnet Faucet
-                    </Typography>
+                    </h1>
                 </div>
-                <Typography variant="body2" className="text-gray-500 text-sm">
+                <p className="text-gray-500 text-sm">
                     Get free testnet tokens instantly
-                </Typography>
-            </Box>
+                </p>
+            </div>
 
             {/* Stepper */}
-            <Box className="px-6 py-4 bg-gray-50">
-                <Stepper activeStep={activeStep} alternativeLabel>
-                    {steps.map((label) => (
-                        <Step key={label}>
-                            <StepLabel>{label}</StepLabel>
-                        </Step>
+            <div className="px-6 py-4 bg-gray-50 border-y border-gray-200">
+                <div className="flex justify-between items-center">
+                    {steps.map((label, index) => (
+                        <div key={label} className="flex items-center flex-1">
+                            <div className="flex flex-col items-center flex-1">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                                    index <= activeStep
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-300 text-gray-600'
+                                }`}>
+                                    {index + 1}
+                                </div>
+                                <span className="text-xs mt-1 text-center">{label}</span>
+                            </div>
+                            {index < steps.length - 1 && (
+                                <div className={`h-0.5 flex-1 -mt-6 ${
+                                    index < activeStep ? 'bg-blue-600' : 'bg-gray-300'
+                                }`}></div>
+                            )}
+                        </div>
                     ))}
-                </Stepper>
-            </Box>
+                </div>
+            </div>
 
             {/* Content */}
-            <CardContent className="p-6">
+            <div className="p-6">
                 {activeStep === 0 && (
                     <AccountDetailsForm formData={formData} onNext={handleNext}/>
                 )}
@@ -116,8 +102,8 @@ function PaymentCard() {
                 {activeStep === 2 && (
                     <ConfirmationStep formData={formData} onBack={handleBack} onReset={handleReset}/>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
 
@@ -128,7 +114,6 @@ const accountDetailsSchema = yup.object({
     paymentMethod: yup.string().required("Payment method is required").oneOf(['card', 'sepa', 'crypto'], "Invalid payment method"),
 });
 
-// Card payment validation schema
 const cardPaymentSchema = yup.object({
     cardholderName: yup.string().required("Cardholder name is required"),
     cardNumber: yup.string()
@@ -142,7 +127,6 @@ const cardPaymentSchema = yup.object({
         .matches(/^[0-9]{3,4}$/, "CVC must be 3 or 4 digits"),
 });
 
-// SEPA payment validation schema
 const sepaPaymentSchema = yup.object({
     accountHolderName: yup.string().required("Account holder name is required"),
     iban: yup.string()
@@ -153,7 +137,6 @@ const sepaPaymentSchema = yup.object({
         .matches(/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/, "Invalid BIC/SWIFT format"),
 });
 
-// Crypto payment validation schema
 const cryptoPaymentSchema = yup.object({
     cryptoType: yup.string()
         .required("Cryptocurrency type is required")
@@ -187,8 +170,6 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
         }
     }, [tokenAmount]);
 
-
-
     const onSubmit = (data: any) => {
         onNext(data);
     };
@@ -196,103 +177,103 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-                <TextField
-                    label="Public Key"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Public Key</label>
+                <input
+                    type="text"
                     {...register("publicKey")}
-                    error={!!errors.publicKey}
-                    helperText={errors.publicKey?.message}
-                    fullWidth
-                    variant="outlined"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors.publicKey ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="Enter your Carmentis public key"
-                    size="medium"
                 />
-            </div>
-
-            <div>
-                <TextField
-                    label="Token Amount"
-                    type="number"
-                    {...register("tokenAmount")}
-                    error={!!errors.tokenAmount}
-                    helperText={errors.tokenAmount?.message || "Maximum 100 CMTS"}
-                    fullWidth
-                    variant="outlined"
-                    placeholder="100"
-                    size="medium"
-                />
-                {euroAmount && (
-                    <Typography variant="caption" className="text-gray-500 mt-1 block">
-                        ≈ {euroAmount} EUR
-                    </Typography>
+                {errors.publicKey && (
+                    <p className="mt-1 text-sm text-red-600">{errors.publicKey.message}</p>
                 )}
             </div>
 
             <div>
-                <FormLabel component="legend" className="mb-2 font-medium text-sm">Payment Method</FormLabel>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Token Amount</label>
+                <input
+                    type="number"
+                    {...register("tokenAmount")}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors.tokenAmount ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="100"
+                />
+                {errors.tokenAmount && (
+                    <p className="mt-1 text-sm text-red-600">{errors.tokenAmount.message}</p>
+                )}
+                {!errors.tokenAmount && (
+                    <p className="mt-1 text-sm text-gray-500">Maximum 100 CMTS</p>
+                )}
+                {euroAmount && (
+                    <p className="mt-1 text-sm text-gray-500">≈ {euroAmount} EUR</p>
+                )}
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
                 <Controller
                     name="paymentMethod"
                     control={control}
                     render={({field}) => (
-                        <RadioGroup {...field} className="space-y-2">
-                            <Paper className="hover:bg-gray-50 transition-colors cursor-pointer">
-                                <FormControlLabel
+                        <div className="space-y-2">
+                            <label className="flex items-center p-4 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                    type="radio"
+                                    {...field}
                                     value="card"
-                                    control={<Radio/>}
-                                    label={
-                                        <div className="flex items-center justify-between w-full py-1">
-                                            <span className="font-medium">Card Payment</span>
-                                            <span className="text-xs text-gray-500">Visa, Mastercard, Amex</span>
-                                        </div>
-                                    }
-                                    className="px-4 py-2 m-0 w-full"
+                                    checked={field.value === 'card'}
+                                    className="mr-3"
                                 />
-                            </Paper>
-                            <Paper className="hover:bg-gray-50 transition-colors cursor-pointer">
-                                <FormControlLabel
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="font-medium">Card Payment</span>
+                                    <span className="text-xs text-gray-500">Visa, Mastercard, Amex</span>
+                                </div>
+                            </label>
+                            <label className="flex items-center p-4 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                    type="radio"
+                                    {...field}
                                     value="sepa"
-                                    control={<Radio/>}
-                                    label={
-                                        <div className="flex items-center justify-between w-full py-1">
-                                            <span className="font-medium">SEPA Transfer</span>
-                                            <span className="text-xs text-gray-500">Bank Transfer</span>
-                                        </div>
-                                    }
-                                    className="px-4 py-2 m-0 w-full"
+                                    checked={field.value === 'sepa'}
+                                    className="mr-3"
                                 />
-                            </Paper>
-                            <Paper className="hover:bg-gray-50 transition-colors cursor-pointer">
-                                <FormControlLabel
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="font-medium">SEPA Transfer</span>
+                                    <span className="text-xs text-gray-500">Bank Transfer</span>
+                                </div>
+                            </label>
+                            <label className="flex items-center p-4 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input
+                                    type="radio"
+                                    {...field}
                                     value="crypto"
-                                    control={<Radio/>}
-                                    label={
-                                        <div className="flex items-center justify-between w-full py-1">
-                                            <span className="font-medium">Cryptocurrency</span>
-                                            <span className="text-xs text-gray-500">BTC, ETH, USDT</span>
-                                        </div>
-                                    }
-                                    className="px-4 py-2 m-0 w-full"
+                                    checked={field.value === 'crypto'}
+                                    className="mr-3"
                                 />
-                            </Paper>
-                        </RadioGroup>
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="font-medium">Cryptocurrency</span>
+                                    <span className="text-xs text-gray-500">BTC, ETH, USDT</span>
+                                </div>
+                            </label>
+                        </div>
                     )}
                 />
                 {errors.paymentMethod && (
-                    <Typography color="error" variant="caption" className="mt-1 block">
-                        {errors.paymentMethod.message}
-                    </Typography>
+                    <p className="mt-1 text-sm text-red-600">{errors.paymentMethod.message}</p>
                 )}
             </div>
 
-            <Box className="flex justify-end pt-4">
-                <Button
+            <div className="flex justify-end pt-4">
+                <button
                     type="submit"
-                    variant="contained"
-                    size="large"
-                    fullWidth
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 >
                     Continue
-                </Button>
-            </Box>
+                </button>
+            </div>
         </form>
     );
 }
@@ -300,133 +281,164 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
 // Card Payment Form
 function CardPaymentForm({formData, onSubmit, errors, control, register}: any) {
     const formatCardNumber = (value: string) => {
-        // Remove all non-digit characters
         const digits = value.replace(/\D/g, '');
-        // Add a space after every 4 digits
         const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-        return formatted.substring(0, 19); // Limit to 16 digits + 3 spaces
+        return formatted.substring(0, 19);
     };
 
     const formatExpiryDate = (value: string) => {
-        // Remove all non-digit characters
         const digits = value.replace(/\D/g, '');
-        // Format as MM/YY
         if (digits.length > 2) {
             return `${digits.substring(0, 2)}/${digits.substring(2, 4)}`;
         }
         return digits;
     };
 
-
     return (
         <div className="space-y-6">
-            <TextField
-                label="Cardholder Name"
-                {...register("cardholderName")}
-                error={!!errors.cardholderName}
-                helperText={errors.cardholderName?.message}
-                fullWidth
-                variant="outlined"
-                placeholder="John Doe"
-            />
-
-            <Controller
-                name="cardNumber"
-                control={control}
-                render={({field}) => (
-                    <TextField
-                        label="Card Number"
-                        value={field.value}
-                        onChange={(e) => field.onChange(formatCardNumber(e.target.value))}
-                        error={!!errors.cardNumber}
-                        helperText={errors.cardNumber?.message}
-                        fullWidth
-                        variant="outlined"
-                        placeholder="4242 4242 4242 4242"
-                    />
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+                <input
+                    type="text"
+                    {...register("cardholderName")}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors.cardholderName ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="John Doe"
+                />
+                {errors.cardholderName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.cardholderName.message}</p>
                 )}
-            />
+            </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
                 <Controller
-                    name="expiryDate"
+                    name="cardNumber"
                     control={control}
                     render={({field}) => (
-                        <TextField
-                            label="Expiry Date (MM/YY)"
-                            value={field.value}
-                            onChange={(e) => field.onChange(formatExpiryDate(e.target.value))}
-                            error={!!errors.expiryDate}
-                            helperText={errors.expiryDate?.message}
-                            variant="outlined"
-                            placeholder="MM/YY"
-                        />
+                        <>
+                            <input
+                                type="text"
+                                value={field.value}
+                                onChange={(e) => field.onChange(formatCardNumber(e.target.value))}
+                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                    errors.cardNumber ? 'border-red-500' : 'border-gray-300'
+                                }`}
+                                placeholder="4242 4242 4242 4242"
+                            />
+                            {errors.cardNumber && (
+                                <p className="mt-1 text-sm text-red-600">{errors.cardNumber.message}</p>
+                            )}
+                        </>
                     )}
-                />
-
-                <TextField
-                    label="CVC"
-                    {...register("cvc")}
-                    error={!!errors.cvc}
-                    helperText={!!errors.cvc?.message}
-                    variant="outlined"
-                    placeholder="123"
-                    inputProps={{maxLength: 4}}
                 />
             </div>
 
-            <Alert severity="info" className="mt-4">
-                <Typography variant="body2" className="text-sm font-medium mb-1">
-                    Test Card
-                </Typography>
-                <Typography variant="body2" className="text-xs">
-                    4242 4242 4242 4242 • Any future date • Any 3-digit CVC
-                </Typography>
-            </Alert>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                    <Controller
+                        name="expiryDate"
+                        control={control}
+                        render={({field}) => (
+                            <>
+                                <input
+                                    type="text"
+                                    value={field.value}
+                                    onChange={(e) => field.onChange(formatExpiryDate(e.target.value))}
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                        errors.expiryDate ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                    placeholder="MM/YY"
+                                />
+                                {errors.expiryDate && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.expiryDate.message}</p>
+                                )}
+                            </>
+                        )}
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+                    <input
+                        type="text"
+                        {...register("cvc")}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.cvc ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        placeholder="123"
+                        maxLength={4}
+                    />
+                    {errors.cvc && (
+                        <p className="mt-1 text-sm text-red-600">{errors.cvc.message}</p>
+                    )}
+                </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <p className="text-sm font-medium text-blue-900 mb-1">Test Card</p>
+                <p className="text-xs text-blue-800">4242 4242 4242 4242 • Any future date • Any 3-digit CVC</p>
+            </div>
         </div>
     );
 }
-
 
 // SEPA Payment Form
 function SEPAPaymentForm({formData, onSubmit, errors, control, register}: any) {
     return (
         <div className="space-y-6">
-            <TextField
-                label="Account Holder Name"
-                {...register("accountHolderName")}
-                error={!!errors.accountHolderName}
-                helperText={errors.accountHolderName?.message}
-                fullWidth
-                variant="outlined"
-                placeholder="John Doe"
-            />
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder Name</label>
+                <input
+                    type="text"
+                    {...register("accountHolderName")}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors.accountHolderName ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="John Doe"
+                />
+                {errors.accountHolderName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.accountHolderName.message}</p>
+                )}
+            </div>
 
-            <TextField
-                label="IBAN"
-                {...register("iban")}
-                error={!!errors.iban}
-                helperText={errors.iban?.message}
-                fullWidth
-                variant="outlined"
-                placeholder="DE89 3704 0044 0532 0130 00"
-            />
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">IBAN</label>
+                <input
+                    type="text"
+                    {...register("iban")}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors.iban ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="DE89 3704 0044 0532 0130 00"
+                />
+                {errors.iban && (
+                    <p className="mt-1 text-sm text-red-600">{errors.iban.message}</p>
+                )}
+            </div>
 
-            <TextField
-                label="BIC/SWIFT"
-                {...register("bic")}
-                error={!!errors.bic}
-                helperText={errors.bic?.message}
-                fullWidth
-                variant="outlined"
-                placeholder="DEUTDEFF"
-            />
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">BIC/SWIFT</label>
+                <input
+                    type="text"
+                    {...register("bic")}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors.bic ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="DEUTDEFF"
+                />
+                {errors.bic && (
+                    <p className="mt-1 text-sm text-red-600">{errors.bic.message}</p>
+                )}
+            </div>
 
-            <Alert severity="info" className="mt-4">
-                <Typography variant="body2" className="text-xs">
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <p className="text-xs text-blue-800">
                     Transfers take 1-3 business days. Use your public key as payment reference.
-                </Typography>
-            </Alert>
+                </p>
+            </div>
         </div>
     );
 }
@@ -435,41 +447,71 @@ function SEPAPaymentForm({formData, onSubmit, errors, control, register}: any) {
 function CryptoPaymentForm({formData, onSubmit, errors, control, register}: any) {
     return (
         <div className="space-y-6">
-            <FormControl fullWidth error={!!errors.cryptoType} className="border border-gray-200 bg-gray-50">
-                <FormLabel className="px-4 pt-3 font-medium">Cryptocurrency</FormLabel>
+            <div className="border border-gray-200 bg-gray-50 rounded-md p-4">
+                <label className="block text-sm font-medium text-gray-700 mb-3">Cryptocurrency</label>
                 <Controller
                     name="cryptoType"
                     control={control}
                     render={({field}) => (
-                        <RadioGroup {...field} className="px-4 pb-3">
-                            <FormControlLabel value="BTC" control={<Radio/>} label="Bitcoin (BTC)"/>
-                            <FormControlLabel value="ETH" control={<Radio/>} label="Ethereum (ETH)"/>
-                            <FormControlLabel value="USDT" control={<Radio/>} label="Tether (USDT)"/>
-                        </RadioGroup>
+                        <div className="space-y-2">
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    {...field}
+                                    value="BTC"
+                                    checked={field.value === 'BTC'}
+                                    className="mr-2"
+                                />
+                                <span>Bitcoin (BTC)</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    {...field}
+                                    value="ETH"
+                                    checked={field.value === 'ETH'}
+                                    className="mr-2"
+                                />
+                                <span>Ethereum (ETH)</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    {...field}
+                                    value="USDT"
+                                    checked={field.value === 'USDT'}
+                                    className="mr-2"
+                                />
+                                <span>Tether (USDT)</span>
+                            </label>
+                        </div>
                     )}
                 />
                 {errors.cryptoType && (
-                    <Typography color="error" variant="caption" className="px-4 pb-2">
-                        {errors.cryptoType.message}
-                    </Typography>
+                    <p className="mt-2 text-sm text-red-600">{errors.cryptoType.message}</p>
                 )}
-            </FormControl>
+            </div>
 
-            <TextField
-                label="Wallet Address"
-                {...register("walletAddress")}
-                error={!!errors.walletAddress}
-                helperText={errors.walletAddress?.message}
-                fullWidth
-                variant="outlined"
-                placeholder="Enter your wallet address"
-            />
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Wallet Address</label>
+                <input
+                    type="text"
+                    {...register("walletAddress")}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        errors.walletAddress ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter your wallet address"
+                />
+                {errors.walletAddress && (
+                    <p className="mt-1 text-sm text-red-600">{errors.walletAddress.message}</p>
+                )}
+            </div>
 
-            <Alert severity="info" className="mt-4">
-                <Typography variant="body2" className="text-xs">
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <p className="text-xs text-blue-800">
                     Tokens credited after 6 confirmations. Rate locked for 15 minutes.
-                </Typography>
-            </Alert>
+                </p>
+            </div>
         </div>
     );
 }
@@ -478,7 +520,6 @@ function CryptoPaymentForm({formData, onSubmit, errors, control, register}: any)
 function PaymentForm({formData, onNext, onBack}: { formData: any, onNext: (data: any) => void, onBack: () => void }) {
     const [paymentError, setPaymentError] = useState<string | null>(null);
 
-    // Determine which validation schema to use based on payment method
     const validationSchema = formData.paymentMethod === 'card'
         ? cardPaymentSchema
         : formData.paymentMethod === 'sepa'
@@ -498,14 +539,14 @@ function PaymentForm({formData, onNext, onBack}: { formData: any, onNext: (data:
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {paymentError && (
-                <Alert severity="error" className="mb-4">
-                    {paymentError}
-                </Alert>
+                <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    <p className="text-sm text-red-800">{paymentError}</p>
+                </div>
             )}
 
-            <Typography variant="body2" className="text-gray-600 mb-4">
+            <p className="text-sm text-gray-600">
                 Payment method: <strong className="text-black">{formData.paymentMethod === 'card' ? 'Card' : formData.paymentMethod === 'sepa' ? 'SEPA' : 'Crypto'}</strong>
-            </Typography>
+            </p>
 
             {formData.paymentMethod === 'card' && (
                 <CardPaymentForm
@@ -537,25 +578,21 @@ function PaymentForm({formData, onNext, onBack}: { formData: any, onNext: (data:
                 />
             )}
 
-            <Box className="flex gap-3 mt-6">
-                <Button
+            <div className="flex gap-3 mt-6">
+                <button
                     type="button"
-                    variant="outlined"
-                    size="large"
                     onClick={onBack}
-                    fullWidth
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 >
                     Back
-                </Button>
-                <Button
+                </button>
+                <button
                     type="submit"
-                    variant="contained"
-                    size="large"
-                    fullWidth
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 >
                     Continue
-                </Button>
-            </Box>
+                </button>
+            </div>
         </form>
     );
 }
@@ -564,7 +601,6 @@ function PaymentForm({formData, onNext, onBack}: { formData: any, onNext: (data:
 function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: () => void, onReset: () => void }) {
     const toast = useToast();
 
-    // Get the appropriate payment hook based on the payment method
     const {processPayment: processCardPayment, loading: isProcessingCardPayment} = useCardPayment();
     const {processPayment: processSEPAPayment, loading: isProcessingSEPAPayment} = useSEPAPayment();
     const {processPayment: processCryptoPayment, loading: isProcessingCryptoPayment} = useCryptoPayment();
@@ -588,7 +624,6 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
         const tokenAmount = CMTSToken.create(formData.tokenAmount);
         const tokenAmountInEuros = converter.invert(tokenAmount);
         try {
-            // Process payment based on the payment method
             if (formData.paymentMethod === 'card') {
                 await processCardPayment({
                     cardNumber: formData.cardNumber,
@@ -617,15 +652,6 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                 });
             }
 
-            // Then create token account
-            /*
-            await createAccount({
-                publicKey: formData.publicKey,
-                tokenAmount: formData.tokenAmount,
-            });
-
-             */
-
             setSuccess(true);
             toast.success("Payment successful! Your account has been credited with tokens.");
         } catch (e) {
@@ -636,39 +662,37 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
         }
     };
 
-    // Render payment method details based on the selected payment method
     const renderPaymentMethodDetails = () => {
         if (formData.paymentMethod === 'card') {
             return (
                 <div className="flex justify-between">
-                    <Typography variant="body2" className="text-black/70">Payment Method:</Typography>
-                    <Typography variant="body2" className="font-medium text-black/80">
+                    <span className="text-sm text-gray-600">Payment Method:</span>
+                    <span className="text-sm font-medium text-gray-800">
                         Card ending in {formData.cardNumber.slice(-4)}
-                    </Typography>
+                    </span>
                 </div>
             );
         } else if (formData.paymentMethod === 'sepa') {
             return (
                 <div className="flex justify-between">
-                    <Typography variant="body2" className="text-black/70">Payment Method:</Typography>
-                    <Typography variant="body2" className="font-medium text-black/80">
+                    <span className="text-sm text-gray-600">Payment Method:</span>
+                    <span className="text-sm font-medium text-gray-800">
                         SEPA Transfer from {formData.accountHolderName}
-                    </Typography>
+                    </span>
                 </div>
             );
         } else if (formData.paymentMethod === 'crypto') {
             return (
                 <div className="flex justify-between">
-                    <Typography variant="body2" className="text-black/70">Payment Method:</Typography>
-                    <Typography variant="body2" className="font-medium text-black/80">
+                    <span className="text-sm text-gray-600">Payment Method:</span>
+                    <span className="text-sm font-medium text-gray-800">
                         {formData.cryptoType} Payment
-                    </Typography>
+                    </span>
                 </div>
             );
         }
     };
 
-    // Get payment status message based on the payment method
     const getPaymentStatusMessage = () => {
         if (formData.paymentMethod === 'card') {
             return "Your payment has been processed and your account has been credited with tokens.";
@@ -683,68 +707,62 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
     return (
         <div className="space-y-6">
             {error && (
-                <Alert severity="error" className="mb-4">
-                    {error}
-                </Alert>
+                <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    <p className="text-sm text-red-800">{error}</p>
+                </div>
             )}
 
             {success ? (
                 <div className="text-center py-6">
-                    <Box className="mb-4 flex justify-center">
+                    <div className="mb-4 flex justify-center">
                         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-500" fill="none"
                                  viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
                             </svg>
                         </div>
-                    </Box>
-                    <Typography variant="h5" className="font-semibold mb-2">
-                        Payment Successful
-                    </Typography>
-                    <Typography variant="body2" className="mb-6 text-gray-600">
+                    </div>
+                    <h2 className="text-2xl font-semibold mb-2">Payment Successful</h2>
+                    <p className="text-sm text-gray-600 mb-6">
                         {getPaymentStatusMessage()}
-                    </Typography>
-                    <Button
+                    </p>
+                    <button
                         onClick={onReset}
-                        variant="contained"
-                        size="large"
-                        fullWidth
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                     >
                         New Purchase
-                    </Button>
+                    </button>
                 </div>
             ) : (
                 <>
-                    <Box className="p-6 bg-gray-50 border border-gray-200">
-                        <Typography variant="subtitle1" className="font-medium mb-4">
-                            Order Summary
-                        </Typography>
-                        <Divider className="mb-4"/>
+                    <div className="p-6 bg-gray-50 border border-gray-200 rounded-md">
+                        <h3 className="text-base font-medium mb-4">Order Summary</h3>
+                        <hr className="mb-4 border-gray-300"/>
                         <div className="space-y-3">
                             <div className="flex justify-between">
-                                <Typography variant="body2" className="text-gray-600">Public Key:</Typography>
-                                <Typography variant="body2" className="font-medium max-w-xs truncate">
+                                <span className="text-sm text-gray-600">Public Key:</span>
+                                <span className="text-sm font-medium max-w-xs truncate">
                                     {formData.publicKey}
-                                </Typography>
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <Typography variant="body2" className="text-gray-600">Token Amount:</Typography>
-                                <Typography variant="body2" className="font-medium">
+                                <span className="text-sm text-gray-600">Token Amount:</span>
+                                <span className="text-sm font-medium">
                                     {CMTSToken.create(formData.tokenAmount).toString()} tokens
-                                </Typography>
+                                </span>
                             </div>
                             {renderPaymentMethodDetails()}
-                            <Divider className="my-3"/>
+                            <hr className="my-3 border-gray-300"/>
                             <div className="flex justify-between">
-                                <Typography variant="subtitle2" className="font-medium">Total:</Typography>
-                                <Typography variant="subtitle2" className="font-semibold">
+                                <span className="text-sm font-medium">Total:</span>
+                                <span className="text-sm font-semibold">
                                     {converter.invert(CMTSToken.create(formData.tokenAmount)).toString()}
-                                </Typography>
+                                </span>
                             </div>
                         </div>
-                    </Box>
+                    </div>
 
-                    <Box className="flex justify-center mt-4">
+                    <div className="flex justify-center mt-4">
                         <Captcha
                             type="mixed"
                             length={6}
@@ -754,35 +772,35 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                             }}
                             showSuccessAnimation
                         />
-                    </Box>
+                    </div>
 
-                    <Box className="flex justify-between mt-6">
-                        <Button
+                    <div className="flex gap-3 mt-6">
+                        <button
                             type="button"
-                            variant="outlined"
-                            size="large"
                             onClick={onBack}
                             disabled={isSubmitting}
-
+                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Back
-                        </Button>
-                        <Button
+                        </button>
+                        <button
                             onClick={handleSubmit}
-                            variant="contained"
-                            size="large"
                             disabled={isSubmitting || !captchaValidated}
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
-                                <div className="flex items-center">
-                                    <CircularProgress size={20} className="mr-2"/>
+                                <span className="flex items-center justify-center">
+                                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
                                     Processing...
-                                </div>
+                                </span>
                             ) : (
                                 "Complete Purchase"
                             )}
-                        </Button>
-                    </Box>
+                        </button>
+                    </div>
                 </>
             )}
         </div>
