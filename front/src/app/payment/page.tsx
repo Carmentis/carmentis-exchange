@@ -52,14 +52,14 @@ function PaymentCard() {
     return (
         <div className="w-full max-w-2xl bg-white rounded-lg shadow-sm">
             {/* Header */}
-            <div className="p-6 pb-4">
+            <div className="p-6 pb-4 border-b border-gray-200">
                 <div className="flex items-center gap-3 mb-2">
-                    <Image src="/carmentis.svg" alt="Carmentis Logo" width={24} height={24}/>
-                    <h1 className="text-xl font-semibold">
+                    <Image src="/carmentis.svg" alt="Carmentis Logo" width={28} height={28}/>
+                    <h1 className="text-2xl font-bold tracking-tight">
                         Carmentis Testnet Faucet
                     </h1>
                 </div>
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-600 text-sm leading-relaxed">
                     Get free testnet tokens instantly
                 </p>
             </div>
@@ -77,7 +77,7 @@ function PaymentCard() {
                                 }`}>
                                     {index + 1}
                                 </div>
-                                <span className="text-xs mt-1 text-center">{label}</span>
+                                <span className="text-xs mt-1 text-center font-medium">{label}</span>
                             </div>
                             {index < steps.length - 1 && (
                                 <div className={`h-0.5 flex-1 -mt-6 ${
@@ -177,43 +177,43 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Public Key</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Public Key</label>
                 <input
                     type="text"
                     {...register("publicKey")}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                         errors.publicKey ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter your Carmentis public key"
                 />
                 {errors.publicKey && (
-                    <p className="mt-1 text-sm text-red-600">{errors.publicKey.message}</p>
+                    <p className="mt-2 text-sm font-medium text-red-600">{errors.publicKey.message}</p>
                 )}
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Token Amount</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Token Amount</label>
                 <input
                     type="number"
                     {...register("tokenAmount")}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                         errors.tokenAmount ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="100"
                 />
                 {errors.tokenAmount && (
-                    <p className="mt-1 text-sm text-red-600">{errors.tokenAmount.message}</p>
+                    <p className="mt-2 text-sm font-medium text-red-600">{errors.tokenAmount.message}</p>
                 )}
                 {!errors.tokenAmount && (
-                    <p className="mt-1 text-sm text-gray-500">Maximum 100 CMTS</p>
+                    <p className="mt-2 text-sm text-gray-600">Maximum 100 CMTS</p>
                 )}
                 {euroAmount && (
-                    <p className="mt-1 text-sm text-gray-500">≈ {euroAmount} EUR</p>
+                    <p className="mt-1 text-sm font-medium text-gray-700">≈ {euroAmount} EUR</p>
                 )}
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">Payment Method</label>
                 <Controller
                     name="paymentMethod"
                     control={control}
@@ -228,8 +228,8 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
                                     className="mr-3"
                                 />
                                 <div className="flex items-center justify-between w-full">
-                                    <span className="font-medium">Card Payment</span>
-                                    <span className="text-xs text-gray-500">Visa, Mastercard, Amex</span>
+                                    <span className="font-semibold text-gray-900">Card Payment</span>
+                                    <span className="text-xs text-gray-500 font-medium">Visa, Mastercard, Amex</span>
                                 </div>
                             </label>
                             <label className="flex items-center p-4 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer transition-colors">
@@ -241,8 +241,8 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
                                     className="mr-3"
                                 />
                                 <div className="flex items-center justify-between w-full">
-                                    <span className="font-medium">SEPA Transfer</span>
-                                    <span className="text-xs text-gray-500">Bank Transfer</span>
+                                    <span className="font-semibold text-gray-900">SEPA Transfer</span>
+                                    <span className="text-xs text-gray-500 font-medium">Bank Transfer</span>
                                 </div>
                             </label>
                             <label className="flex items-center p-4 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer transition-colors">
@@ -254,8 +254,8 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
                                     className="mr-3"
                                 />
                                 <div className="flex items-center justify-between w-full">
-                                    <span className="font-medium">Cryptocurrency</span>
-                                    <span className="text-xs text-gray-500">BTC, ETH, USDT</span>
+                                    <span className="font-semibold text-gray-900">Cryptocurrency</span>
+                                    <span className="text-xs text-gray-500 font-medium">BTC, ETH, USDT</span>
                                 </div>
                             </label>
                         </div>
@@ -269,7 +269,7 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
             <div className="flex justify-end pt-4">
                 <button
                     type="submit"
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-base transition-all"
                 >
                     Continue
                 </button>
@@ -722,8 +722,8 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                             </svg>
                         </div>
                     </div>
-                    <h2 className="text-2xl font-semibold mb-2">Payment Successful</h2>
-                    <p className="text-sm text-gray-600 mb-6">
+                    <h2 className="text-2xl font-bold mb-3 tracking-tight">Payment Successful</h2>
+                    <p className="text-base text-gray-600 mb-6 leading-relaxed">
                         {getPaymentStatusMessage()}
                     </p>
                     <button
@@ -736,7 +736,7 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
             ) : (
                 <>
                     <div className="p-6 bg-gray-50 border border-gray-200 rounded-md">
-                        <h3 className="text-base font-medium mb-4">Order Summary</h3>
+                        <h3 className="text-lg font-bold mb-4 tracking-tight">Order Summary</h3>
                         <hr className="mb-4 border-gray-300"/>
                         <div className="space-y-3">
                             <div className="flex justify-between">
