@@ -1,4 +1,4 @@
-import { CardPaymentService } from '../card-payment.interface';
+
 import {
     BadRequestException,
     Injectable,
@@ -11,17 +11,16 @@ import { PaymentRequestDto } from '../dto/payment-request.dto';
 import { PaymentResponseDto } from '../dto/payment-response.dto';
 import { PaymentEntity, PaymentStatus } from '../entities/payment.entity';
 import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
-import { ConfigService } from '@nestjs/config';
 import {
     CarmentisError,
     CMTSToken,
     CurrencyConverterFactory,
+    Utils,
 } from '@cmts-dev/carmentis-sdk/server';
-import { ControlConfigService } from '../../config/services/ControlConfigService';
-
+import { FaucetConfigService } from '../../config/services/faucet-config.service';
+import { randomBytes } from 'crypto';
 @Injectable()
-export class StancerCardPaymentService implements CardPaymentService {
+export class StancerCardPaymentService {
     private readonly logger = new Logger(StancerCardPaymentService.name);
     private readonly apiUrl = 'https://api.stancer.com/v2';
     private readonly apiKey = process.env.STANCER_API_KEY;
@@ -29,10 +28,9 @@ export class StancerCardPaymentService implements CardPaymentService {
     constructor(
         @InjectRepository(PaymentEntity)
         private readonly paymentRepository: Repository<PaymentEntity>,
-        private readonly configService: ConfigService,
-        private readonly controlConfig: ControlConfigService,
+        private readonly faucetConfig: FaucetConfigService,
     ) {
-        this.apiKey = this.controlConfig.getStancerApiKey();
+        this.apiKey = this.faucetConfig.getStancerApiKey();
     }
 
     /**
@@ -62,7 +60,7 @@ export class StancerCardPaymentService implements CardPaymentService {
 
             const equivTokensInEuros = converter.invert(cmtsTokens).getAmount();
             const payment = new PaymentEntity();
-            payment.id = uuidv4();
+            payment.id = Utils.binaryToHexa(randomBytes(64));
             payment.tokens = paymentRequest.tokens;
             payment.amount = equivTokensInEuros;
             payment.walletPublicKey = paymentRequest.walletPublicKey;
@@ -81,7 +79,7 @@ export class StancerCardPaymentService implements CardPaymentService {
             // Step 3: Create a payment using the card and the UUID for return_url
             // Make sure to use the correct backend URL for the return_url
             // This should be the publicly accessible URL of your backend
-            const backendUrl = this.controlConfig.getControlApiEndpoint();
+            const backendUrl = this.faucetConfig.getControlApiEndpoint();
             const returnUrl = `${backendUrl}/payment/update/${payment.id}`;
             const paymentResponse = await this.createPayment(
                 equivTokensInEuros,

@@ -1,23 +1,19 @@
+import { BadRequestException, Injectable, Logger, NotFoundException, OnModuleInit, } from '@nestjs/common';
 import {
-    BadRequestException,
-    Injectable,
-    Logger,
-    NotFoundException,
-    OnModuleInit,
-} from '@nestjs/common';
-import {
-    Blockchain,
+    AccountVb,
     CMTSToken,
+    CryptoEncoderFactory,
+    FeesCalculationFormulaFactory,
     Hash,
     PrivateSignatureKey,
+    Provider,
     ProviderFactory,
     PublicSignatureKey,
-    StringSignatureEncoder,
-    TokenUnit,
+    SectionType,
 } from '@cmts-dev/carmentis-sdk/server';
 
 import { CryptoService } from './crypto/crypto.service';
-import { ControlConfigService } from './config/services/ControlConfigService';
+import { FaucetConfigService } from './config/services/faucet-config.service';
 import { AxiosError } from 'axios';
 
 /**
@@ -34,10 +30,11 @@ export class IssuerService implements OnModuleInit {
     private readonly logger = new Logger(IssuerService.name);
     private issuerAccountHash: Hash;
     private nodeUrl: string;
+    private issuerPrivateKey: PrivateSignatureKey;
     private issuerPublicKey: PublicSignatureKey;
 
     constructor(
-        private readonly controlConfigService: ControlConfigService,
+        private readonly controlConfigService: FaucetConfigService,
         private readonly cryptoService: CryptoService,
     ) {}
 
@@ -47,22 +44,22 @@ export class IssuerService implements OnModuleInit {
      */
     async onModuleInit(): Promise<void> {
         this.nodeUrl = this.controlConfigService.getNodeUrl();
-        const issuerPrivateKey = this.cryptoService.getIssuerPrivateKey();
-        this.issuerPublicKey = issuerPrivateKey.getPublicKey();
+        this.issuerPrivateKey = await this.cryptoService.getIssuerPrivateKey();
+        this.issuerPublicKey = await this.issuerPrivateKey.getPublicKey();
 
         // ensure that account is defined on the blockchain (otherwise abort)
-        const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+        const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
         this.logger.log(
-            `Checking if issuer account (${encoder.encodePublicKey(this.issuerPublicKey)}) exists on chain (${this.nodeUrl})`,
+            `Checking if issuer account (${await encoder.encodePublicKey(this.issuerPublicKey)}) exists on chain (${this.nodeUrl})`,
         );
         await this.abortIfIssuerAccountIsUndefined();
     }
 
     private async abortIfIssuerAccountIsUndefined() {
         // Initialize blockchain connection
-        const issuerPrivateKey = this.cryptoService.getIssuerPrivateKey();
-        const blockchain = this.createBlockchainConnection(issuerPrivateKey);
-        const issuerAccountPublicKey = issuerPrivateKey.getPublicKey();
+        const issuerPrivateKey = await this.cryptoService.getIssuerPrivateKey();
+        const blockchain = this.createBlockchainConnection();
+        const issuerAccountPublicKey = await issuerPrivateKey.getPublicKey();
 
         // Initialize issuer account
         const isIssuerExists = await this.isAccountPublishedOnChain(
@@ -75,18 +72,13 @@ export class IssuerService implements OnModuleInit {
     }
 
     /**
-     * Creates a blockchain connection using the provided private key
-     * @param privateKey The private key to use for the connection
+     * Creates a provider with a node
      * @returns A Blockchain instance
      */
-    private createBlockchainConnection(
-        privateKey: PrivateSignatureKey,
-    ): Blockchain {
-        const provider = ProviderFactory.createKeyedProviderExternalProvider(
-            privateKey,
+    private createBlockchainConnection(): Provider {
+        return ProviderFactory.createInMemoryProviderWithExternalProvider(
             this.nodeUrl,
-        );
-        return Blockchain.createFromProvider(provider);
+        );;
     }
 
     /**
@@ -95,19 +87,19 @@ export class IssuerService implements OnModuleInit {
      * @param publicKey The public key of the issuer
      */
     private async isAccountPublishedOnChain(
-        blockchain: Blockchain,
+        blockchain: Provider,
         publicKey: PublicSignatureKey,
     ): Promise<boolean> {
-        const explorer = blockchain.getExplorer();
+        const explorer = blockchain;
 
         // Check if the issuer account already exists
-        const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+        const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
         this.logger.log(
-            `Checking existence of issuer account based on the public key ${encoder.encodePublicKey(publicKey)}`,
+            `Checking existence of issuer account based on the public key ${await encoder.encodePublicKey(publicKey)}`,
         );
         try {
             this.issuerAccountHash =
-                await explorer.getAccountByPublicKey(publicKey);
+                Hash.from(await explorer.getAccountIdByPublicKey(publicKey));
             this.logger.log(
                 `Issuer account located at hash ${this.issuerAccountHash.encode()}`,
             );
@@ -149,21 +141,21 @@ export class IssuerService implements OnModuleInit {
         }
 
         // Create blockchain connection
-        const blockchain = this.createBlockchainConnection(
-            this.cryptoService.getIssuerPrivateKey(),
-        );
-        const explorer = blockchain.getExplorer();
+        const blockchain = this.createBlockchainConnection();
+        const explorer = blockchain;
 
         // Log the operation
+        const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
         this.logger.debug(
-            `Crediting ${tokenAmount} tokens to account with public key ${buyerPublicKey.getPublicKeyAsString()}`,
+            `Crediting ${tokenAmount} tokens to account with public key ${await encoder.encodePublicKey(buyerPublicKey)}`,
         );
 
         try {
             // Try to find existing account
             const buyerAccountHash =
-                await explorer.getAccountByPublicKey(buyerPublicKey);
+                Hash.from(await explorer.getAccountIdByPublicKey(buyerPublicKey));
             await this.creditExistingAccount(
+                this.issuerPrivateKey,
                 blockchain,
                 buyerAccountHash,
                 tokenAmount,
@@ -172,6 +164,7 @@ export class IssuerService implements OnModuleInit {
             // Account doesn't exist, create a new one
             this.logger.warn(`Buyer account not found: ${error}`);
             await this.createAndCreditNewAccount(
+                this.issuerPrivateKey,
                 blockchain,
                 buyerPublicKey,
                 tokenAmount,
@@ -187,20 +180,36 @@ export class IssuerService implements OnModuleInit {
      * @returns The hash of the created account
      */
     private async createAndCreditNewAccount(
-        blockchain: Blockchain,
+        issuerPrivateSignatureKey: PrivateSignatureKey,
+        blockchain: Provider,
         buyerPublicKey: PublicSignatureKey,
         tokenAmount: CMTSToken,
     ): Promise<Hash> {
         this.logger.log('Creating new token account...');
 
-        const account = await blockchain.createAccount(
-            this.issuerAccountHash,
+        const issuerAccountHash = this.issuerAccountHash;
+        const accountCreationMb = await AccountVb.createAccountCreationMicroblock(
             buyerPublicKey,
-            tokenAmount.getAmount(TokenUnit.ATOMIC),
+            tokenAmount,
+            issuerAccountHash.toBytes(),
         );
+        const feesCalculationFormulaVersion = (await blockchain.getProtocolVariables()).getFeesCalculationVersion();
+        const feesCalculationFormula = FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(
+            feesCalculationFormulaVersion
+        );
+        accountCreationMb.setGas(await feesCalculationFormula.computeFees(
+            issuerPrivateSignatureKey.getSignatureSchemeId(),
+            accountCreationMb
+        ));
+        await accountCreationMb.seal(issuerPrivateSignatureKey, {
+            feesPayerAccount: issuerAccountHash.toBytes(),
+        });
 
-        account.setGasPrice(CMTSToken.oneCMTS());
-        const hash = await account.publishUpdates();
+        // publish
+        await blockchain.publishMicroblock(accountCreationMb);
+
+        //const hash = await account.publishUpdates();
+        const hash = accountCreationMb.getHash();
 
         this.logger.log(
             `Token account created (${hash.encode()}) with initial balance of ${tokenAmount.toString()} tokens`,
@@ -216,32 +225,57 @@ export class IssuerService implements OnModuleInit {
      * @param tokenAmount The amount of tokens to credit
      */
     private async creditExistingAccount(
-        blockchain: Blockchain,
+        issuerPrivateSignatureKey: PrivateSignatureKey,
+        blockchain: Provider,
         receiverAccountHash: Hash,
         tokenAmount: CMTSToken,
-    ): Promise<void> {
+    ): Promise<Hash> {
         this.logger.log(
             `Transferring ${tokenAmount.toString()} tokens to existing account at ${receiverAccountHash.encode()}`,
         );
 
-        const explorer = blockchain.getExplorer();
-        const senderAccountHash = await explorer.getAccountByPublicKey(
-            this.cryptoService.getIssuerPublicKey(),
+        const explorer = blockchain;
+        const senderAccountHash = await explorer.getAccountIdFromPublicKey(
+            this.issuerPublicKey,
         );
-        const senderAccount = await blockchain.loadAccount(senderAccountHash);
-
-        await senderAccount.transfer({
-            account: receiverAccountHash.toBytes(),
+        const senderAccount = await blockchain.loadAccountVirtualBlockchain(senderAccountHash);
+        const tokenTransferMb = await senderAccount.createMicroblock();
+        tokenTransferMb.addSection({
+            type: SectionType.ACCOUNT_TRANSFER,
             amount: tokenAmount.getAmountAsAtomic(),
             publicReference: '',
             privateReference: '',
+            account: receiverAccountHash.toBytes(),
         });
+        const feesCalculationFormulaVersion = (
+            await blockchain.getProtocolVariables()
+        ).getFeesCalculationVersion();
+        const feesCalculationFormula =
+            FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(
+                feesCalculationFormulaVersion,
+            );
+        tokenTransferMb.setGas(
+            await feesCalculationFormula.computeFees(
+                issuerPrivateSignatureKey.getSignatureSchemeId(),
+                tokenTransferMb,
+            ),
+        );
 
-        senderAccount.setGasPrice(CMTSToken.oneCMTS());
-        await senderAccount.publishUpdates();
+        const issuerAccountHash = this.issuerAccountHash;
+        await tokenTransferMb.seal(issuerPrivateSignatureKey, {
+            feesPayerAccount: issuerAccountHash.toBytes(),
+        })
+
+        // publish
+        const hash = tokenTransferMb.getHash();
+        this.logger.log(`Transferring ${tokenAmount} tokens to account id ${hash.encode()}`)
+        console.log(tokenTransferMb.toString())
+        await blockchain.publishMicroblock(tokenTransferMb);
+        //console.log(tokenTransferMb.toString())
 
         this.logger.log(
             `Transfer of ${tokenAmount} tokens completed successfully to account ${receiverAccountHash.encode()}`,
         );
+        return hash;
     }
 }

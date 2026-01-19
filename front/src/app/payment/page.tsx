@@ -43,70 +43,9 @@ import {useSEPAPayment} from "@/hooks/useSEPAPayment";
 
 export default function Home() {
     return (
-        <div className="min-h-screen flex flex-col bg-white">
-            <Navbar/>
-            <main className="flex-grow py-16 relative">
-                {/* Background with subtle gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white to-neutral-50 -z-10"></div>
-                {/* Glass pattern overlay */}
-                <div className="absolute inset-0 opacity-30 -z-10"
-                     style={{
-                         backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z\' fill=\'%23f5f5f5\' fill-opacity=\'0.6\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")'
-                     }}>
-                </div>
-                <Container maxWidth="lg" className="h-full flex items-center justify-center">
-                    <PaymentCard/>
-                </Container>
-            </main>
-            <Footer/>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+            <PaymentCard/>
         </div>
-    );
-}
-
-function Navbar() {
-    const nodeUrl = useConnectionNodeUrl();
-
-    return (
-        <AppBar position="sticky" elevation={0} className="glass border-b border-white/30">
-            <Toolbar className="flex justify-between py-2">
-                <div className="flex items-center space-x-2">
-                    <Image src="/carmentis.svg" alt="Carmentis Logo" width={32} height={32}/>
-                    <Typography variant="h6" className="font-semibold">
-                        Carmentis <span className="text-black/70">Faucets</span>
-                    </Typography>
-                </div>
-
-                <div className="flex space-x-4 items-center">
-                    <Tooltip title={nodeUrl || "Connecting..."}>
-                        <Chip
-                            label={nodeUrl ? "Node connected" : "Connecting..."}
-                            color={nodeUrl ? "success" : "default"}
-                            size="small"
-                            variant="outlined"
-                            className="text-xs glass-light glass-no-border"
-                        />
-                    </Tooltip>
-
-                </div>
-            </Toolbar>
-        </AppBar>
-    );
-}
-
-function Footer() {
-    return (
-        <Box component="footer" className="py-4 px-6 glass-dark border-t border-white/30">
-            <Container maxWidth="lg">
-                <div className="flex justify-between items-center">
-                    <Typography variant="body2" className="text-black/60">
-                        © {new Date().getFullYear()} Carmentis Faucets
-                    </Typography>
-                    <Typography variant="body2" className="text-black/60">
-                        Powered by Carmentis
-                    </Typography>
-                </div>
-            </Container>
-        </Box>
     );
 }
 
@@ -138,50 +77,43 @@ function PaymentCard() {
     };
 
     return (
-        <Card className="w-full max-w-2xl glass rounded-xl overflow-hidden">
-            <Box className="glass-light p-6 border-b border-white/30">
-                <div className="flex items-center space-x-3 mb-2">
-                    <Image src="/carmentis.svg" alt="Carmentis Logo" width={32} height={32}/>
-                    <Typography variant="h5" className="font-semibold text-black/80">Get Carmentis Testnet tokens for free</Typography>
+        <Card className="w-full max-w-2xl shadow-sm">
+            {/* Header */}
+            <Box className="p-6 pb-4">
+                <div className="flex items-center gap-3 mb-2">
+                    <Image src="/carmentis.svg" alt="Carmentis Logo" width={24} height={24}/>
+                    <Typography variant="h6" className="font-semibold">
+                        Carmentis Testnet Faucet
+                    </Typography>
                 </div>
+                <Typography variant="body2" className="text-gray-500 text-sm">
+                    Get free testnet tokens instantly
+                </Typography>
             </Box>
 
-            <Box className="px-6 pt-4">
-                <Stepper activeStep={activeStep} alternativeLabel className="mb-6">
+            {/* Stepper */}
+            <Box className="px-6 py-4 bg-gray-50">
+                <Stepper activeStep={activeStep} alternativeLabel>
                     {steps.map((label) => (
-                        <Step key={label} sx={{textColor: "#000"}}>
+                        <Step key={label}>
                             <StepLabel>{label}</StepLabel>
                         </Step>
                     ))}
                 </Stepper>
             </Box>
 
-            <CardContent className="p-6 pt-2">
+            {/* Content */}
+            <CardContent className="p-6">
                 {activeStep === 0 && (
-                    <>
-                        <Typography variant="h6" className="mb-4 font-medium text-black/80">
-                            Account Details
-                        </Typography>
-                        <AccountDetailsForm formData={formData} onNext={handleNext}/>
-                    </>
+                    <AccountDetailsForm formData={formData} onNext={handleNext}/>
                 )}
 
                 {activeStep === 1 && (
-                    <>
-                        <Typography variant="h6" className="mb-4 font-medium text-black/80">
-                            Payment Information
-                        </Typography>
-                        <PaymentForm formData={formData} onNext={handleNext} onBack={handleBack}/>
-                    </>
+                    <PaymentForm formData={formData} onNext={handleNext} onBack={handleBack}/>
                 )}
 
                 {activeStep === 2 && (
-                    <>
-                        <Typography variant="h6" className="mb-4 font-medium text-black/80">
-                            Confirmation
-                        </Typography>
-                        <ConfirmationStep formData={formData} onBack={handleBack} onReset={handleReset}/>
-                    </>
+                    <ConfirmationStep formData={formData} onBack={handleBack} onReset={handleReset}/>
                 )}
             </CardContent>
         </Card>
@@ -261,99 +193,103 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <TextField
-                label="Public Key"
-                {...register("publicKey")}
-                error={!!errors.publicKey}
-                helperText={errors.publicKey?.message}
-                fullWidth
-                variant="outlined"
-                placeholder="Enter your public key"
-                className="mb-4 glass-light"
-                InputProps={{
-                    className: "border-white/30"
-                }}
-            />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div>
+                <TextField
+                    label="Public Key"
+                    {...register("publicKey")}
+                    error={!!errors.publicKey}
+                    helperText={errors.publicKey?.message}
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Enter your Carmentis public key"
+                    size="medium"
+                />
+            </div>
 
-            <TextField
-                label="Token Amount (100 CMTS max)"
-                type="number"
-                {...register("tokenAmount")}
-                error={!!errors.tokenAmount}
-                helperText={errors.tokenAmount?.message}
-                fullWidth
-                variant="outlined"
-                placeholder="Enter amount of tokens"
-                className="glass-light"
-                InputProps={{
-                    className: "border-white/30"
-                }}
-            />
+            <div>
+                <TextField
+                    label="Token Amount"
+                    type="number"
+                    {...register("tokenAmount")}
+                    error={!!errors.tokenAmount}
+                    helperText={errors.tokenAmount?.message || "Maximum 100 CMTS"}
+                    fullWidth
+                    variant="outlined"
+                    placeholder="100"
+                    size="medium"
+                />
+                {euroAmount && (
+                    <Typography variant="caption" className="text-gray-500 mt-1 block">
+                        ≈ {euroAmount} EUR
+                    </Typography>
+                )}
+            </div>
 
-            {euroAmount && (
-                <Typography variant="body2" className="text-gray-600 mt-1 ml-2">
-                    Equivalent: {euroAmount} €
-                </Typography>
-            )}
-
-            <FormControl component="fieldset" className="mt-6 w-full">
-                <FormLabel component="legend" className="text-black/80 mb-2">Payment Method</FormLabel>
+            <div>
+                <FormLabel component="legend" className="mb-2 font-medium text-sm">Payment Method</FormLabel>
                 <Controller
                     name="paymentMethod"
                     control={control}
                     render={({field}) => (
-                        <RadioGroup {...field} className="glass-light p-4 rounded-lg border border-white/30">
-                            <FormControlLabel
-                                value="card"
-                                control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>}
-                                label={
-                                    <div className="flex items-center">
-                                        <span className="mr-2">Card Payment</span>
-                                        <Chip size="small" label="Visa, Mastercard, Amex" className="text-xs"/>
-                                    </div>
-                                }
-                                className="mb-2"
-                            />
-                            <FormControlLabel
-                                value="sepa"
-                                control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>}
-                                label={
-                                    <div className="flex items-center">
-                                        <span className="mr-2">SEPA Transfer</span>
-                                        <Chip size="small" label="European Bank Transfer" className="text-xs"/>
-                                    </div>
-                                }
-                                className="mb-2"
-                            />
-                            <FormControlLabel
-                                value="crypto"
-                                control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>}
-                                label={
-                                    <div className="flex items-center">
-                                        <span className="mr-2">Cryptocurrency</span>
-                                        <Chip size="small" label="BTC, ETH, USDT" className="text-xs"/>
-                                    </div>
-                                }
-                            />
+                        <RadioGroup {...field} className="space-y-2">
+                            <Paper className="hover:bg-gray-50 transition-colors cursor-pointer">
+                                <FormControlLabel
+                                    value="card"
+                                    control={<Radio/>}
+                                    label={
+                                        <div className="flex items-center justify-between w-full py-1">
+                                            <span className="font-medium">Card Payment</span>
+                                            <span className="text-xs text-gray-500">Visa, Mastercard, Amex</span>
+                                        </div>
+                                    }
+                                    className="px-4 py-2 m-0 w-full"
+                                />
+                            </Paper>
+                            <Paper className="hover:bg-gray-50 transition-colors cursor-pointer">
+                                <FormControlLabel
+                                    value="sepa"
+                                    control={<Radio/>}
+                                    label={
+                                        <div className="flex items-center justify-between w-full py-1">
+                                            <span className="font-medium">SEPA Transfer</span>
+                                            <span className="text-xs text-gray-500">Bank Transfer</span>
+                                        </div>
+                                    }
+                                    className="px-4 py-2 m-0 w-full"
+                                />
+                            </Paper>
+                            <Paper className="hover:bg-gray-50 transition-colors cursor-pointer">
+                                <FormControlLabel
+                                    value="crypto"
+                                    control={<Radio/>}
+                                    label={
+                                        <div className="flex items-center justify-between w-full py-1">
+                                            <span className="font-medium">Cryptocurrency</span>
+                                            <span className="text-xs text-gray-500">BTC, ETH, USDT</span>
+                                        </div>
+                                    }
+                                    className="px-4 py-2 m-0 w-full"
+                                />
+                            </Paper>
                         </RadioGroup>
                     )}
                 />
                 {errors.paymentMethod && (
-                    <Typography color="error" variant="caption" className="mt-1">
+                    <Typography color="error" variant="caption" className="mt-1 block">
                         {errors.paymentMethod.message}
                     </Typography>
                 )}
-            </FormControl>
+            </div>
 
-            <Box className="flex justify-end mt-6">
+            <Box className="flex justify-end pt-4">
                 <Button
                     type="submit"
                     variant="contained"
                     size="large"
-                    className="py-3 px-6 rounded-lg glass-light glass-hover"
+                    fullWidth
                 >
-                    Continue to Payment
+                    Continue
                 </Button>
             </Box>
         </form>
@@ -391,10 +327,6 @@ function CardPaymentForm({formData, onSubmit, errors, control, register}: any) {
                 fullWidth
                 variant="outlined"
                 placeholder="John Doe"
-                className="mb-4 glass-light"
-                InputProps={{
-                    className: "border-white/30"
-                }}
             />
 
             <Controller
@@ -410,10 +342,6 @@ function CardPaymentForm({formData, onSubmit, errors, control, register}: any) {
                         fullWidth
                         variant="outlined"
                         placeholder="4242 4242 4242 4242"
-                        className="mb-4 glass-light"
-                        InputProps={{
-                            className: "border-white/30"
-                        }}
                     />
                 )}
             />
@@ -431,10 +359,6 @@ function CardPaymentForm({formData, onSubmit, errors, control, register}: any) {
                             helperText={errors.expiryDate?.message}
                             variant="outlined"
                             placeholder="MM/YY"
-                            className="glass-light"
-                            InputProps={{
-                                className: "border-white/30"
-                            }}
                         />
                     )}
                 />
@@ -443,26 +367,21 @@ function CardPaymentForm({formData, onSubmit, errors, control, register}: any) {
                     label="CVC"
                     {...register("cvc")}
                     error={!!errors.cvc}
-                    helperText={errors.cvc?.message}
+                    helperText={!!errors.cvc?.message}
                     variant="outlined"
                     placeholder="123"
-                    className="glass-light"
-                    InputProps={{
-                        className: "border-white/30",
-                        inputProps: {maxLength: 4}
-                    }}
+                    inputProps={{maxLength: 4}}
                 />
             </div>
 
-            <Box className="mt-6 p-4 glass-dark rounded-lg">
-                <Typography variant="subtitle2" className="mb-2 font-medium text-black/80">
-                    Test Cards (for development only):
+            <Alert severity="info" className="mt-4">
+                <Typography variant="body2" className="text-sm font-medium mb-1">
+                    Test Card
                 </Typography>
-                <Typography variant="body2" className="text-black/70">
-                    • Visa: 4242 4242 4242 4242<br/>
-                    Use any future expiry date and any 3-digit CVC.
+                <Typography variant="body2" className="text-xs">
+                    4242 4242 4242 4242 • Any future date • Any 3-digit CVC
                 </Typography>
-            </Box>
+            </Alert>
         </div>
     );
 }
@@ -480,10 +399,6 @@ function SEPAPaymentForm({formData, onSubmit, errors, control, register}: any) {
                 fullWidth
                 variant="outlined"
                 placeholder="John Doe"
-                className="mb-4 glass-light"
-                InputProps={{
-                    className: "border-white/30"
-                }}
             />
 
             <TextField
@@ -494,10 +409,6 @@ function SEPAPaymentForm({formData, onSubmit, errors, control, register}: any) {
                 fullWidth
                 variant="outlined"
                 placeholder="DE89 3704 0044 0532 0130 00"
-                className="mb-4 glass-light"
-                InputProps={{
-                    className: "border-white/30"
-                }}
             />
 
             <TextField
@@ -508,22 +419,13 @@ function SEPAPaymentForm({formData, onSubmit, errors, control, register}: any) {
                 fullWidth
                 variant="outlined"
                 placeholder="DEUTDEFF"
-                className="glass-light"
-                InputProps={{
-                    className: "border-white/30"
-                }}
             />
 
-            <Box className="mt-6 p-4 glass-dark rounded-lg">
-                <Typography variant="subtitle2" className="mb-2 font-medium text-black/80">
-                    SEPA Transfer Information:
+            <Alert severity="info" className="mt-4">
+                <Typography variant="body2" className="text-xs">
+                    Transfers take 1-3 business days. Use your public key as payment reference.
                 </Typography>
-                <Typography variant="body2" className="text-black/70">
-                    • Please use your public key as the payment reference<br/>
-                    • Transfers typically take 1-3 business days to process<br/>
-                    • No additional fees are charged for SEPA transfers
-                </Typography>
-            </Box>
+            </Alert>
         </div>
     );
 }
@@ -532,21 +434,21 @@ function SEPAPaymentForm({formData, onSubmit, errors, control, register}: any) {
 function CryptoPaymentForm({formData, onSubmit, errors, control, register}: any) {
     return (
         <div className="space-y-6">
-            <FormControl fullWidth className="mb-4 glass-light" error={!!errors.cryptoType}>
-                <FormLabel className="px-3 pt-2">Cryptocurrency</FormLabel>
+            <FormControl fullWidth error={!!errors.cryptoType} className="border border-gray-200 bg-gray-50">
+                <FormLabel className="px-4 pt-3 font-medium">Cryptocurrency</FormLabel>
                 <Controller
                     name="cryptoType"
                     control={control}
                     render={({field}) => (
-                        <RadioGroup {...field} className="px-3 pb-2">
-                            <FormControlLabel value="BTC" control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>} label="Bitcoin (BTC)"/>
-                            <FormControlLabel value="ETH" control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>} label="Ethereum (ETH)"/>
-                            <FormControlLabel value="USDT" control={<Radio sx={{ color: 'rgba(0, 0, 0, 0.54)', '&.Mui-checked': { color: 'rgba(0, 0, 0, 0.54)' } }}/>} label="Tether (USDT)"/>
+                        <RadioGroup {...field} className="px-4 pb-3">
+                            <FormControlLabel value="BTC" control={<Radio/>} label="Bitcoin (BTC)"/>
+                            <FormControlLabel value="ETH" control={<Radio/>} label="Ethereum (ETH)"/>
+                            <FormControlLabel value="USDT" control={<Radio/>} label="Tether (USDT)"/>
                         </RadioGroup>
                     )}
                 />
                 {errors.cryptoType && (
-                    <Typography color="error" variant="caption" className="px-3 pb-2">
+                    <Typography color="error" variant="caption" className="px-4 pb-2">
                         {errors.cryptoType.message}
                     </Typography>
                 )}
@@ -560,22 +462,13 @@ function CryptoPaymentForm({formData, onSubmit, errors, control, register}: any)
                 fullWidth
                 variant="outlined"
                 placeholder="Enter your wallet address"
-                className="glass-light"
-                InputProps={{
-                    className: "border-white/30"
-                }}
             />
 
-            <Box className="mt-6 p-4 glass-dark rounded-lg">
-                <Typography variant="subtitle2" className="mb-2 font-medium text-black/80">
-                    Cryptocurrency Payment Information:
+            <Alert severity="info" className="mt-4">
+                <Typography variant="body2" className="text-xs">
+                    Tokens credited after 6 confirmations. Rate locked for 15 minutes.
                 </Typography>
-                <Typography variant="body2" className="text-black/70">
-                    • Tokens will be credited after 6 confirmations on the blockchain<br/>
-                    • Please ensure you send from a wallet you control<br/>
-                    • The exchange rate will be locked for 15 minutes
-                </Typography>
-            </Box>
+            </Alert>
         </div>
     );
 }
@@ -609,12 +502,9 @@ function PaymentForm({formData, onNext, onBack}: { formData: any, onNext: (data:
                 </Alert>
             )}
 
-            <Box className="mb-4 p-3 glass-dark rounded-lg">
-                <Typography variant="body2" className="text-black/70">
-                    Selected payment
-                    method: <strong>{formData.paymentMethod === 'card' ? 'Card Payment' : formData.paymentMethod === 'sepa' ? 'SEPA Transfer' : 'Cryptocurrency'}</strong>
-                </Typography>
-            </Box>
+            <Typography variant="body2" className="text-gray-600 mb-4">
+                Payment method: <strong className="text-black">{formData.paymentMethod === 'card' ? 'Card' : formData.paymentMethod === 'sepa' ? 'SEPA' : 'Crypto'}</strong>
+            </Typography>
 
             {formData.paymentMethod === 'card' && (
                 <CardPaymentForm
@@ -646,13 +536,13 @@ function PaymentForm({formData, onNext, onBack}: { formData: any, onNext: (data:
                 />
             )}
 
-            <Box className="flex justify-between mt-6">
+            <Box className="flex gap-3 mt-6">
                 <Button
                     type="button"
                     variant="outlined"
                     size="large"
                     onClick={onBack}
-                    className="py-3 px-6 rounded-lg glass-dark glass-hover"
+                    fullWidth
                 >
                     Back
                 </Button>
@@ -660,9 +550,9 @@ function PaymentForm({formData, onNext, onBack}: { formData: any, onNext: (data:
                     type="submit"
                     variant="contained"
                     size="large"
-                    className="py-3 px-6 rounded-lg glass-light glass-hover"
+                    fullWidth
                 >
-                    Review Order
+                    Continue
                 </Button>
             </Box>
         </form>
@@ -800,46 +690,46 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                             </svg>
                         </div>
                     </Box>
-                    <Typography variant="h5" className="font-semibold mb-2 text-black/80">
-                        Transaction Complete!
+                    <Typography variant="h5" className="font-semibold mb-2">
+                        Payment Successful
                     </Typography>
-                    <Typography variant="body1" className="mb-6 text-black/70">
+                    <Typography variant="body2" className="mb-6 text-gray-600">
                         {getPaymentStatusMessage()}
                     </Typography>
                     <Button
                         onClick={onReset}
                         variant="contained"
                         size="large"
-                        className="py-3 px-6 rounded-lg glass-light glass-hover"
+                        fullWidth
                     >
-                        Start New Purchase
+                        New Purchase
                     </Button>
                 </div>
             ) : (
                 <>
-                    <Box className="glass-dark p-4 rounded-lg">
-                        <Typography variant="subtitle1" className="font-medium mb-2 text-black/80">
+                    <Box className="p-6 bg-gray-50 border border-gray-200">
+                        <Typography variant="subtitle1" className="font-medium mb-4">
                             Order Summary
                         </Typography>
-                        <Divider className="mb-3"/>
-                        <div className="space-y-2">
+                        <Divider className="mb-4"/>
+                        <div className="space-y-3">
                             <div className="flex justify-between">
-                                <Typography variant="body2" className="text-black/70">Public Key:</Typography>
-                                <Typography variant="body2" className="font-medium text-black/80 max-w-xs truncate">
+                                <Typography variant="body2" className="text-gray-600">Public Key:</Typography>
+                                <Typography variant="body2" className="font-medium max-w-xs truncate">
                                     {formData.publicKey}
                                 </Typography>
                             </div>
                             <div className="flex justify-between">
-                                <Typography variant="body2" className="text-black/70">Token Amount:</Typography>
-                                <Typography variant="body2" className="font-medium text-black/80">
+                                <Typography variant="body2" className="text-gray-600">Token Amount:</Typography>
+                                <Typography variant="body2" className="font-medium">
                                     {CMTSToken.create(formData.tokenAmount).toString()} tokens
                                 </Typography>
                             </div>
                             {renderPaymentMethodDetails()}
-                            <Divider className="my-2"/>
+                            <Divider className="my-3"/>
                             <div className="flex justify-between">
-                                <Typography variant="subtitle2" className="text-black/80">Total:</Typography>
-                                <Typography variant="subtitle2" className="font-semibold text-black/80">
+                                <Typography variant="subtitle2" className="font-medium">Total:</Typography>
+                                <Typography variant="subtitle2" className="font-semibold">
                                     {converter.invert(CMTSToken.create(formData.tokenAmount)).toString()}
                                 </Typography>
                             </div>
@@ -853,7 +743,7 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                             size="large"
                             onClick={onBack}
                             disabled={isSubmitting}
-                            className="py-3 px-6 rounded-lg glass-dark glass-hover"
+                            
                         >
                             Back
                         </Button>
@@ -862,7 +752,7 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
                             variant="contained"
                             size="large"
                             disabled={isSubmitting}
-                            className="py-3 px-6 rounded-lg glass-light glass-hover"
+                            
                         >
                             {isSubmitting ? (
                                 <div className="flex items-center">

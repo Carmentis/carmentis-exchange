@@ -2,8 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
-import { ControlConfigModule } from './config/control-config.module';
-import { ControlConfigService } from './config/services/ControlConfigService';
+import { FaucetConfigModule } from './config/faucet-config.module';
+import { FaucetConfigService } from './config/services/faucet-config.service';
 import getPort, { portNumbers } from 'get-port';
 
 async function bootstrap() {
@@ -11,8 +11,8 @@ async function bootstrap() {
 
     // we instantiate the node config application to obtain the port
     const configModule =
-        await NestFactory.createApplicationContext(ControlConfigModule);
-    const configService = configModule.get(ControlConfigService);
+        await NestFactory.createApplicationContext(FaucetConfigModule);
+    const configService = configModule.get(FaucetConfigService);
 
     // create the app
     const app = await NestFactory.create(AppModule);

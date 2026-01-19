@@ -2,6 +2,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    PrimaryColumn,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
@@ -14,7 +15,7 @@ export class PaymentStatus {
 
 @Entity('payments')
 export class PaymentEntity {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn()
     id: string;
 
     @Column({ nullable: false })

@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Get,
     Inject,
     Post,
     HttpCode,
@@ -59,7 +60,7 @@ export class PaymentController {
      * @param id The local payment ID
      * @returns The payment status
      */
-    @Post('result/:id')
+    @Get('status/:id')
     @HttpCode(HttpStatus.OK)
     async checkPaymentStatus(
         @Param('id') id: string,

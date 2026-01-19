@@ -6,9 +6,9 @@ import { join } from 'path';
 import * as toml from '@iarna/toml';
 
 @Injectable()
-export class ControlConfigService {
+export class FaucetConfigService {
     private controlConfig: ConfigType;
-    private logger = new Logger(ControlConfigService.name);
+    private logger = new Logger(FaucetConfigService.name);
 
     constructor() {
         this.loadConfigFile();
@@ -19,11 +19,10 @@ export class ControlConfigService {
         // Some filenames might be undefined due to access to env variables that might be undefined./
         const candidatesConfigFilenames: (string | undefined)[] = [
             'config.toml',
-            'control-config.toml',
+            'fauct-config.toml',
             'exchange-config.toml',
             process.env['CONFIG_FILENAME'],
-            process.env['CONTROL_CONFIG_FILENAME'],
-            process.env['EXCHANGE_CONFIG_FILENAME'],
+            process.env['FAUCET_CONFIG_FILENAME'],
         ];
 
         // we construct the candidates config file paths.
@@ -80,36 +79,28 @@ export class ControlConfigService {
     }
 
     getStancerApiKey() {
-        return this.controlConfig.control.purchase.stancer.api_key;
+        return this.controlConfig.faucet.purchase.stancer.api_key;
     }
 
     getPrivateKeyRetrievalMethods() {
-        return this.controlConfig.control.private_key;
+        return this.controlConfig.faucet.private_key;
     }
 
     getSpecifiedPort(): number {
-        return this.controlConfig.control.port;
+        return this.controlConfig.faucet.port;
     }
 
     getSpecifiedStoragePath(): string {
-        return this.controlConfig.control.storage;
+        return this.controlConfig.faucet.storage;
     }
 
     getNodeUrl(): string {
-        return this.controlConfig.control.node_url;
+        return this.controlConfig.faucet.node_url;
     }
 
-    getEncodedAuthorizedPublicKeys(): string[] {
-        const encodedAuthorizedPublicKeys =
-            this.controlConfig.control.auth.allowed_public_keys;
-        return encodedAuthorizedPublicKeys;
-    }
 
-    getJwtSecret() {
-        return this.controlConfig.control.auth.jwt_secret;
-    }
 
     getControlApiEndpoint(): string {
-        return this.controlConfig.control.api_endpoint;
+        return this.controlConfig.faucet.api_endpoint;
     }
 }

@@ -1,25 +1,23 @@
 import {
     PrivateSignatureKey,
-    StringSignatureEncoder,
+    CryptoEncoderFactory,
 } from '@cmts-dev/carmentis-sdk/server';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { promises as fs } from 'fs';
-import { ControlConfigService } from '../config/services/ControlConfigService';
+import { FaucetConfigService } from '../config/services/faucet-config.service';
 
 @Injectable()
-export class CryptoService implements OnModuleInit {
-    private issuerPrivateKey: PrivateSignatureKey;
-    private logger = new Logger(CryptoService.name);
+export class CryptoService {
+    private static issuerPrivateKey: PrivateSignatureKey;
+    private static logger = new Logger(CryptoService.name);
+    private logger = CryptoService.logger;
 
-    constructor(private readonly controlConfig: ControlConfigService) {}
+    constructor(private readonly controlConfig: FaucetConfigService) {}
 
-    async onModuleInit(): Promise<void> {
-        this.logger.log('Initializing issuer service');
-        this.issuerPrivateKey = await this.loadIssuerPrivateKeyFromConfig();
-    }
-
-    getIssuerPrivateKey() {
-        return this.issuerPrivateKey;
+    async getIssuerPrivateKey(): Promise<PrivateSignatureKey> {
+        if (CryptoService.issuerPrivateKey) return CryptoService.issuerPrivateKey;
+        CryptoService.issuerPrivateKey = await this.loadIssuerPrivateKeyFromConfig();
+        return CryptoService.issuerPrivateKey;
     }
 
     /**
@@ -31,13 +29,13 @@ export class CryptoService implements OnModuleInit {
             this.controlConfig.getPrivateKeyRetrievalMethods();
         if (typeof path === 'string') {
             this.logger.log(`Loading issuer private key from file ${path}`);
-            return await this.loadIssuerPrivateKeyFromPath(path);
+            return await CryptoService.loadIssuerPrivateKeyFromPath(path);
         } else if (typeof env === 'string') {
             this.logger.log(`Loading issuer private key from env var ${env}`);
-            return await this.loadIssuerPrivateKeyFromEnvVar(env);
+            return await CryptoService.loadIssuerPrivateKeyFromEnvVar(env);
         } else if (typeof sk === 'string') {
             this.logger.log(`Loading issuer private key from config`);
-            return await this.loadIssuerPrivateKeyFromEncodedPrivateKey(sk);
+            return await CryptoService.loadIssuerPrivateKeyFromEncodedPrivateKey(sk);
         } else {
             throw new Error(
                 'No private key retrieval method specified: Have you added private key to the config?',
@@ -45,12 +43,12 @@ export class CryptoService implements OnModuleInit {
         }
     }
 
-    private async loadIssuerPrivateKeyFromEnvVar(envVarName: string) {
+    private static async loadIssuerPrivateKeyFromEnvVar(envVarName: string) {
         const privateKey = process.env[envVarName];
         if (typeof privateKey === 'string') {
             const encoder =
-                StringSignatureEncoder.defaultStringSignatureEncoder();
-            return encoder.decodePrivateKey(privateKey);
+                CryptoEncoderFactory.defaultStringSignatureEncoder();
+            return await encoder.decodePrivateKey(privateKey);
         } else {
             throw new Error(
                 `Private key specified in env var name ${envVarName} but not defined.`,
@@ -58,14 +56,14 @@ export class CryptoService implements OnModuleInit {
         }
     }
 
-    private async loadIssuerPrivateKeyFromEncodedPrivateKey(
+    private static async loadIssuerPrivateKeyFromEncodedPrivateKey(
         encodedPrivateKey: string,
     ) {
-        const encoder = StringSignatureEncoder.defaultStringSignatureEncoder();
+        const encoder = CryptoEncoderFactory.defaultStringSignatureEncoder();
         return encoder.decodePrivateKey(encodedPrivateKey);
     }
 
-    private async loadIssuerPrivateKeyFromPath(path: string) {
+    private static async loadIssuerPrivateKeyFromPath(path: string) {
         // We expect the specified file: 1) to exist, 2) to be a json file,
         // 3) to have a privateKey field containing the encoded private key.
         try {
@@ -81,8 +79,8 @@ export class CryptoService implements OnModuleInit {
             }
 
             const encoder =
-                StringSignatureEncoder.defaultStringSignatureEncoder();
-            const privKey = encoder.decodePrivateKey(encoded);
+                CryptoEncoderFactory.defaultStringSignatureEncoder();
+            const privKey = await encoder.decodePrivateKey(encoded);
             this.logger.log(`Loaded issuer private key from file: ${path}`);
             return privKey;
         } catch (err) {
@@ -96,7 +94,4 @@ export class CryptoService implements OnModuleInit {
         }
     }
 
-    getIssuerPublicKey() {
-        return this.getIssuerPrivateKey().getPublicKey();
-    }
 }
