@@ -205,7 +205,7 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
                     <p className="mt-2 text-sm font-medium text-red-600">{errors.tokenAmount.message}</p>
                 )}
                 {!errors.tokenAmount && (
-                    <p className="mt-2 text-sm text-gray-600">Maximum 100 CMTS</p>
+                    <p className="mt-2 text-sm text-gray-600">Maximum 1,000,000 CMTS</p>
                 )}
                 {euroAmount && (
                     <p className="mt-1 text-sm font-medium text-gray-700">≈ {euroAmount} EUR</p>
@@ -655,8 +655,9 @@ function ConfirmationStep({formData, onBack, onReset}: { formData: any, onBack: 
             setSuccess(true);
             toast.success("Payment successful! Your account has been credited with tokens.");
         } catch (e) {
-            setError(String(e));
-            toast.error(String(e));
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            setError(errorMsg);
+            toast.error(errorMsg);
         } finally {
             setIsSubmitting(false);
         }

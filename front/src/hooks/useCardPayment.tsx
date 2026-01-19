@@ -66,8 +66,8 @@ export function useCardPayment() {
         };
 
         try {
-            // Call the backend payment endpoint
-            const response = await axios.post(`${EXCHANGE_API}/payment`, {
+            // Prepare payment payload
+            const paymentPayload = {
                 card: {
                     number: paymentDetails.cardNumber.replace(/\s/g, ''),
                     exp_month: parseInt(paymentDetails.expiryDate.split('/')[0], 10),
@@ -78,7 +78,12 @@ export function useCardPayment() {
                 amount: paymentDetails.amount * 100, // Convert to cents
                 tokens: paymentDetails.amount, // Assuming 1 token = 1 currency unit
                 walletPublicKey: paymentDetails.walletPublicKey || 'wallet-' + Date.now()
-            });
+            };
+
+            console.log('Payment payload:', paymentPayload);
+
+            // Call the backend payment endpoint
+            const response = await axios.post(`${EXCHANGE_API}/payment`, paymentPayload);
 
             setPaymentData(response.data);
 
@@ -157,8 +162,31 @@ export function useCardPayment() {
 
             return response.data;
         } catch (err) {
-            const errorMessage = err instanceof Error ? err : new Error(String(err));
-            console.error(`Payment processing error:`, errorMessage);
+            console.error('Payment processing error:', err);
+
+            let errorMessage: Error;
+
+            if (axios.isAxiosError(err)) {
+                console.error('Response data:', err.response?.data);
+                console.error('Response status:', err.response?.status);
+                console.error('Response headers:', err.response?.headers);
+
+                // Extract error message from server response
+                const serverMessage = err.response?.data?.message;
+                if (serverMessage) {
+                    // Handle array of messages or single message
+                    if (Array.isArray(serverMessage)) {
+                        errorMessage = new Error(serverMessage.join(', '));
+                    } else {
+                        errorMessage = new Error(serverMessage);
+                    }
+                } else {
+                    errorMessage = new Error(err.message || 'Payment processing failed');
+                }
+            } else {
+                errorMessage = err instanceof Error ? err : new Error(String(err));
+            }
+
             setError(errorMessage);
             setPaymentStatus('error');
             setLoading(false);
