@@ -162,6 +162,9 @@ export class IssuerService implements OnModuleInit {
         } catch (error) {
             // Account doesn't exist, create a new one
             this.logger.warn(`Buyer account not found: ${error}`);
+            if (error instanceof Error) {
+                this.logger.warn(error.stack);
+            }
             await this.createAndCreditNewAccount(
                 this.issuerPrivateKey,
                 blockchain,
