@@ -23,4 +23,4 @@ allowed_public_keys=[
 
 # This section specifies the api key used by the purchase feature.
 [control.purchase.stancer]
-api_key="stest_M3gR0VoS3sOv3KMAOIK976LQ:" # Required.
+api_key="..." # Required.
