@@ -5,9 +5,12 @@ import { ValidationError } from 'class-validator';
 import { FaucetConfigModule } from './config/faucet-config.module';
 import { FaucetConfigService } from './config/services/faucet-config.service';
 import getPort, { portNumbers } from 'get-port';
+import {Logger as CmtsLogger} from '@cmts-dev/carmentis-sdk/server'
 
 async function bootstrap() {
     const logger = new Logger();
+    CmtsLogger.enableLogsSync()
+
 
     // we instantiate the node config application to obtain the port
     const configModule =
