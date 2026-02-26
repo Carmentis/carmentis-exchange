@@ -153,6 +153,7 @@ export class IssuerService implements OnModuleInit {
             // Try to find existing account
             const buyerAccountHash =
                 Hash.from(await explorer.getAccountIdByPublicKey(buyerPublicKey));
+            this.logger.log(`Buyer account found: ${buyerAccountHash.encode()}`)
             await this.creditExistingAccount(
                 this.issuerPrivateKey,
                 blockchain,
