@@ -3,7 +3,6 @@ import {
     AccountVb,
     CMTSToken,
     CryptoEncoderFactory,
-    FeesCalculationFormulaFactory,
     Hash,
     PrivateSignatureKey,
     Provider,
@@ -193,14 +192,17 @@ export class IssuerService implements OnModuleInit {
             tokenAmount,
             issuerAccountHash.toBytes(),
         );
+        /*
         const feesCalculationFormulaVersion = (await blockchain.getProtocolVariables()).getFeesCalculationVersion();
         const feesCalculationFormula = FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(
             feesCalculationFormulaVersion
         );
-        accountCreationMb.setGas(await feesCalculationFormula.computeFees(
-            issuerPrivateSignatureKey.getSignatureSchemeId(),
-            accountCreationMb
-        ));
+
+         */
+        const fees = await blockchain.computeMicroblockFees(accountCreationMb, {
+            signatureSchemeId: issuerPrivateSignatureKey.getSignatureSchemeId(),
+        });
+        accountCreationMb.setMaxFees(fees);
         await accountCreationMb.seal(issuerPrivateSignatureKey, {
             feesPayerAccount: issuerAccountHash.toBytes(),
         });
@@ -247,19 +249,10 @@ export class IssuerService implements OnModuleInit {
             privateReference: '',
             account: receiverAccountHash.toBytes(),
         });
-        const feesCalculationFormulaVersion = (
-            await blockchain.getProtocolVariables()
-        ).getFeesCalculationVersion();
-        const feesCalculationFormula =
-            FeesCalculationFormulaFactory.getFeesCalculationFormulaByVersion(
-                feesCalculationFormulaVersion,
-            );
-        tokenTransferMb.setGas(
-            await feesCalculationFormula.computeFees(
-                issuerPrivateSignatureKey.getSignatureSchemeId(),
-                tokenTransferMb,
-            ),
-        );
+        const fees = await blockchain.computeMicroblockFees(tokenTransferMb, {
+            signatureSchemeId: issuerPrivateSignatureKey.getSignatureSchemeId(),
+        });
+        tokenTransferMb.setMaxFees(fees);
 
         const issuerAccountHash = this.issuerAccountHash;
         await tokenTransferMb.seal(issuerPrivateSignatureKey, {
