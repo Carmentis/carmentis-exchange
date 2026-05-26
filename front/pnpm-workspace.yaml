@@ -1,0 +1,4 @@
+minimumReleaseAge: 0
+allowBuilds:
+  cbor-extract: true
+  sharp: true

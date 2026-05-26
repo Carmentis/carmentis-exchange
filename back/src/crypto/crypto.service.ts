@@ -1,7 +1,7 @@
 import {
     PrivateSignatureKey,
     CryptoEncoderFactory,
-} from '@cmts-dev/carmentis-sdk/server';
+} from '@cmts-dev/carmentis-sdk-core';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import { FaucetConfigService } from '../config/services/faucet-config.service';

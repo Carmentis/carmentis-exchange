@@ -1,13 +1,15 @@
-# Use the official Node.js LTS image
-FROM node:20-alpine
+FROM node:22-slim
 
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 WORKDIR /app
 
 # Copy package.json (or yarn.lock)
 COPY . .
 
 # Install dependencies and build
-RUN npm install
+RUN pnpm install --frozen-lockfile
 
 
 # Start the Next.js server

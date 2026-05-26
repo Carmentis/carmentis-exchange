@@ -9,7 +9,7 @@ import {
     ProviderFactory,
     PublicSignatureKey,
     SectionType,
-} from '@cmts-dev/carmentis-sdk/server';
+} from '@cmts-dev/carmentis-sdk-core';
 
 import { CryptoService } from './crypto/crypto.service';
 import { FaucetConfigService } from './config/services/faucet-config.service';
@@ -203,10 +203,11 @@ export class IssuerService implements OnModuleInit {
         );
 
          */
-        const fees = await blockchain.computeMicroblockFees(accountCreationMb, {
+        const fees = await blockchain.computeMicroblockGas(accountCreationMb, {
             signatureSchemeId: issuerPrivateSignatureKey.getSignatureSchemeId(),
         });
-        accountCreationMb.setMaxFees(fees);
+        accountCreationMb.setGasPrice(CMTSToken.createMilliToken(1))
+        accountCreationMb.setGas(fees);
         await accountCreationMb.seal(issuerPrivateSignatureKey, {
             feesPayerAccount: issuerAccountHash.toBytes(),
         });
@@ -253,10 +254,11 @@ export class IssuerService implements OnModuleInit {
             privateReference: '',
             account: receiverAccountHash.toBytes(),
         });
-        const fees = await blockchain.computeMicroblockFees(tokenTransferMb, {
+        const fees = await blockchain.computeMicroblockGas(tokenTransferMb, {
             signatureSchemeId: issuerPrivateSignatureKey.getSignatureSchemeId(),
         });
-        tokenTransferMb.setMaxFees(fees);
+        tokenTransferMb.setGas(fees)
+        tokenTransferMb.setGasPrice(CMTSToken.createMilliToken(1));
 
         const issuerAccountHash = this.issuerAccountHash;
         await tokenTransferMb.seal(issuerPrivateSignatureKey, {

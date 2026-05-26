@@ -5,7 +5,7 @@ import { ValidationError } from 'class-validator';
 import { FaucetConfigModule } from './config/faucet-config.module';
 import { FaucetConfigService } from './config/services/faucet-config.service';
 import getPort, { portNumbers } from 'get-port';
-import {Logger as CmtsLogger} from '@cmts-dev/carmentis-sdk/server'
+import {Logger as CmtsLogger} from '@cmts-dev/carmentis-sdk-core'
 
 async function bootstrap() {
     const logger = new Logger();

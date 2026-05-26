@@ -1,23 +1,15 @@
+FROM node:22-slim
 
-# Use official Node.js 20 image as the base image
-FROM node:20
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
-# Set the working directory in the container
 WORKDIR /app
-
-# Copy package*.json and package-lock.json (if present)
-COPY package*.json ./
-
-# Install project dependencies
-RUN npm install
-
-# Copy the rest of the application source code to the working directory
 COPY . .
 
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
+RUN pnpm run build
+RUN pnpm prune --prod
 
-
-# Expose the default application port
 EXPOSE 3000
-
-# Command to run the application
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/main"]

@@ -16,7 +16,7 @@ import {
     CMTSToken,
     CurrencyConverterFactory,
     Utils,
-} from '@cmts-dev/carmentis-sdk/server';
+} from '@cmts-dev/carmentis-sdk-core';
 import { FaucetConfigService } from '../../config/services/faucet-config.service';
 import { randomBytes } from 'crypto';
 @Injectable()
@@ -274,7 +274,7 @@ export class StancerCardPaymentService {
      * @return {Promise<Object|null>} A promise that resolves to the payment record if found, otherwise null.
      */
     async getPaymentById(id: string) {
-        return this.paymentRepository.findOne({ where: { id } });
+        return this.paymentRepository.findOneOrFail({ where: { id } });
     }
 
     /**
