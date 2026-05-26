@@ -9,7 +9,6 @@ COPY . .
 
 RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
 RUN pnpm run build
-RUN pnpm prune --prod
 
 EXPOSE 3000
-CMD ["node", "dist/main"]
+CMD ["pnpm", "start"]
