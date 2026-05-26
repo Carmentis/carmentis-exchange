@@ -53,7 +53,7 @@ export class StancerCardPaymentService {
 
             // we reject transfer for more than 1 million tokens
             const cmtsTokens = CMTSToken.createCMTS(paymentRequest.tokens);
-            const transferLimit = CMTSToken.createCMTS(1000000);
+            const transferLimit = CMTSToken.createCMTS(10_000_000);
             if (cmtsTokens.isGreaterThan(transferLimit)) {
                 throw new BadRequestException(`Cannot purchase more than ${transferLimit.toString()}`);
             }

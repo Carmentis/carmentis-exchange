@@ -205,7 +205,7 @@ function AccountDetailsForm({formData, onNext}: { formData: any, onNext: (data: 
                     <p className="mt-2 text-sm font-medium text-red-600">{errors.tokenAmount.message}</p>
                 )}
                 {!errors.tokenAmount && (
-                    <p className="mt-2 text-sm text-gray-600">Maximum 1,000,000 CMTS</p>
+                    <p className="mt-2 text-sm text-gray-600">Maximum 10,000,000 CMTS</p>
                 )}
                 {euroAmount && (
                     <p className="mt-1 text-sm font-medium text-gray-700">≈ {euroAmount} EUR</p>
