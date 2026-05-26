@@ -7,7 +7,7 @@ RUN corepack enable
 WORKDIR /app
 COPY . .
 
-RUN pnpm i
+RUN pnpm i --frozen-lockfile
 RUN pnpm run build
 
 EXPOSE 3000
