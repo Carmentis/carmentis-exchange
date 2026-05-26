@@ -18,7 +18,7 @@ import { AxiosError } from 'axios';
 /**
  * Maximum allowed token transfer amount to prevent accidental large transfers
  */
-const MAXIMAL_ALLOWED_TOKEN_TRANSFER = 1000000;
+const MAXIMAL_ALLOWED_TOKEN_TRANSFER = 10_000_000;
 
 /**
  * Service responsible for managing the issuer account and token operations
@@ -132,7 +132,7 @@ export class IssuerService implements OnModuleInit {
         // Validate token amount
         const transferredAmount = tokenAmount.getAmountAsAtomic();
         const isNegativeOrZero = transferredAmount <= 0;
-        const isAboveAllowedMax = MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount.getAmount();
+        const isAboveAllowedMax = MAXIMAL_ALLOWED_TOKEN_TRANSFER < tokenAmount.getAmountAsCMTS();
         if ( isNegativeOrZero || isAboveAllowedMax ) {
             throw new BadRequestException(
                 `Invalid amount of token transfer: Should be between zero (excluded) and ${MAXIMAL_ALLOWED_TOKEN_TRANSFER}`,
