@@ -8,7 +8,7 @@ import {useForm, Controller} from 'react-hook-form';
 
 import {useConnectionNodeUrl} from '@/app/payment/connection.context';
 import {useToast} from '@/app/payment/notification.context';
-import {CMTSToken, CurrencyConverterFactory} from "@cmts-dev/carmentis-sdk/client";
+import {CMTSToken, CurrencyConverterFactory} from "@cmts-dev/carmentis-sdk-core";
 import {useCryptoPayment} from "@/hooks/useCryptoPayment";
 import {useCardPayment} from "@/hooks/useCardPayment";
 import {useSEPAPayment} from "@/hooks/useSEPAPayment";
